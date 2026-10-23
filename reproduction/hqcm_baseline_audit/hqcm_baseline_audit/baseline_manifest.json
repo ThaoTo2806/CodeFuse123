@@ -1,0 +1,71 @@
+{
+  "created_utc": "2026-10-15T08:05:22.668147+00:00",
+  "task": "CHCL",
+  "base_model": "meta-llama/Llama-2-7b-hf",
+  "adapter_path": "/kaggle/working/hqcm_llama2_7b_chcl_fixed_v2",
+  "train_samples": 4611,
+  "test_samples": 518,
+  "labels": [
+    "build",
+    "cicd",
+    "docs",
+    "feat",
+    "fix",
+    "refactor",
+    "style",
+    "test"
+  ],
+  "training": {
+    "epochs": 5,
+    "max_length": 512,
+    "learning_rate": 0.0002,
+    "batch_size": 1,
+    "micro_batch_size": 1,
+    "lora_rank": 64,
+    "lora_alpha": 16,
+    "lora_dropout": 0.1,
+    "seed": 0,
+    "quantization": "4-bit",
+    "preprocessing": "custom: preserve answer tokens; left-truncate prompt"
+  },
+  "inference": {
+    "max_input_tokens": 512,
+    "max_new_tokens": 16,
+    "sampling": false,
+    "note": "Custom evaluation script, not unchanged hqcm/gen.py"
+  },
+  "repo_commit": "ea7e7fab1bca176d9afd77350496649d7ca4743f",
+  "repo_status": "M hqcm/sft.py\n M hqcm/xdata.py\n?? hqcm/sft.py.before_label_fix",
+  "python": "3.13.15",
+  "torch": "2.11.0+cu128",
+  "transformers": "4.46.1",
+  "sklearn": "1.6.1",
+  "train_sha256": "b467b82b88615d56ade98f802e03c6a5549ab6a41d9d54f6817b63e35cdbb3f5",
+  "test_sha256": "068689a47374e0e0813d4cb4ee188597a67f20815f89a76a3f76f08827723955",
+  "predictions_file": "reproduction/hqcm_chcl_predictions.json",
+  "predictions_sha256": "4b6a9a27789636721979aeb79bc35958c0a4d7fe1423803d125252461f36dcaf",
+  "predictions_sha256_note": "Hash of the canonical LF-encoded file (json.dumps(indent=2), no trailing newline). The local Windows/OneDrive copy uses CRLF line endings and hashes to e640e01c91f5e8080e43c79cb76d796f71d8594b32df4c0284e508ef7686b38f; content is identical after CRLF->LF normalization.",
+  "metrics": {
+    "accuracy": 0.7760617760617761,
+    "correct": 402,
+    "macro_precision": 0.8394390500057815,
+    "macro_recall": 0.8458015662620926,
+    "macro_f1": 0.8410046676519655,
+    "macro_f1_harmonic_of_macro_pr": 0.8426082975009387,
+    "micro_precision": 0.7775628626692457,
+    "micro_recall": 0.7760617760617761,
+    "micro_f1": 0.7768115942028986,
+    "weighted_f1": 0.7776043592336811,
+    "invalid_count": 1,
+    "metric_definition": "Averages over the 8 real labels only; the single invalid output ('rename' for a 'refactor' sample) is counted as a wrong prediction. macro_f1 = mean of per-class F1. macro_f1_harmonic_of_macro_pr = 2PR/(P+R) of macro P/R, which is the definition used by Table 4 of the ASE'24 paper. The previous value 0.7476 ('macro_f1_including_invalid') was wrong: it averaged over 9 classes including a zero-support INVALID class."
+  },
+  "paper_reference": {
+    "source": "Li et al., ASE'24, Table 4 (HQCM-finetuned Llama2-7b, change classification)",
+    "macro_precision": 0.8060,
+    "macro_recall": 0.8134,
+    "macro_f1": 0.8097,
+    "micro_f1": 0.7587,
+    "delta_micro_f1": 0.0174,
+    "delta_macro_f1": 0.0329
+  }
+}
