@@ -1,0 +1,29 @@
+1. Paper công bố: input, output, cách xử lý (task CHCL)
+	        Nội dung
+Input	    Prompt chứa commit/diff và câu yêu cầu phân loại ở cuối. Bộ HQCM có 5.129 mẫu, mỗi mẫu gồm prompt và answer.
+Output	    Một trong 8 nhãn: build, cicd, docs, feat, fix, refactor, style, test.
+Mô hình	    Llama-2-7B fine-tune bằng LoRA theo kiểu SFT: sinh nhãn dưới dạng text.
+Cấu hình	5 epoch, lr 2e-4, LoRA r=64, α=16, dropout 0.1, max_length 512, temperature=0.
+Đánh giá	Chia 80/20 theo từng nhãn. Table 4: Macro-P 0.806, Macro-R 0.813, Macro-F1 0.8097, Micro-F1 0.7587.
+
+2. Những gì đã tái hiện (codefuse123 (1).ipynb)
+Chạy đủ pipeline: 4.611 mẫu train, 518 mẫu test, Llama-2-7B + LoRA 4-bit, 5 epoch (~5h39).
+Phát hiện quan trọng: code gốc sft.py cắt phải (right-truncation). Prompt dài 659–782 token mà max_length là 512, nên nhãn bị cắt mất và model học sai. Hai lần train đầu cho accuracy 0.19% và 3.3%, dù loss vẫn giảm.
+Đã sửa preprocessing: tokenize riêng prompt và answer, giữ answer + EOS, cắt từ đầu prompt, mask label của prompt bằng -100. Kết quả: Accuracy 77.61%, Weighted-F1 77.76%, Macro-F1 84.10%, 1 invalid.
+
+
+Mình đề xuất gộp thành một paper có luận điểm thống nhất: “Phân loại thay đổi mã đáng tin cậy với SLM trong điều kiện hạn chế ngữ cảnh: tiền xử lý nhận biết độ dài và suy luận ràng buộc nhãn.”
+
+#	Đóng góp	Cách làm	Chi phí
+C1	Audit reproducibility và truncation	Định lượng tỉ lệ prompt bị cắt, so sánh right/left/head+tail truncation, báo cáo theo nhóm độ dài	Thấp
+C2	Nén diff có cấu trúc	Giữ tên file, loại thay đổi, các hunk chính, bỏ context thừa; ablation so với cắt thô	Trung bình
+C3	Suy luận ràng buộc nhãn	Chỉ so sánh logit của 8 nhãn thay vì sinh tự do, nên 0 invalid và có xác suất, rồi đo calibration (ECE)	Thấp
+C4	Giải quyết fix/refactor	Loss có trọng số hoặc focal, hoặc phân loại phân cấp. Làm audit label noise (cleanlab + gán nhãn lại thủ công ~100–200 mẫu bất đồng)	Trung bình
+C5	Đánh giá chặt chẽ	5-fold stratified hoặc ≥3 seed, bootstrap 95% CI, McNemar test, thêm split theo repo/thời gian nếu có metadata	Thấp, tốn giờ GPU
+C6	Hiệu quả chi phí	So sánh Llama-2-7B, một code-SLM 1.5–3B mới hơn và baseline encoder (độ chính xác, VRAM, thời gian/mẫu); ablation 4-bit so với bf16	Trung bình
+
+
+Thứ tự ưu tiên: C1 → C3 → C5 trước vì rẻ và cho kết quả chắc. 
+Sau đó C2 và C4 là phần tạo novelty chính. C6 giúp paper bám đúng chủ đề “small-scale”. Trên Kaggle (GPU ~14.5GB), hãy iterate bằng model nhỏ 1.5–3B với 1 epoch để tiết kiệm giờ, rồi chỉ chạy 7B/5 epoch cho cấu hình cuối.
+
+Cấu trúc bài gợi ý: Introduction (vấn đề truncation và nhập nhằng fix/refactor) → Reproduction study (RQ1: có tái lập được không, bao nhiêu mẫu bị cắt) → Phương pháp C2+C3+C4 (RQ2, RQ3) → Đánh giá chặt chẽ C5 và error analysis → Threats to validity (4-bit, split 90/10 so với 80/20, label noise).
