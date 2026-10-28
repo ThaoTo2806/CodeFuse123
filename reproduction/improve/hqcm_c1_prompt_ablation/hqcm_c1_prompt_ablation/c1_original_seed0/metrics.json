@@ -1,0 +1,20 @@
+{
+  "prompt_variant": "original",
+  "model_id": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+  "model_revision": null,
+  "seed": 0,
+  "split_seed": 42,
+  "train_samples": 4149,
+  "validation_samples": 462,
+  "max_length": 512,
+  "mean_prompt_tokens_before_truncation": 603.7012987012987,
+  "median_prompt_tokens_before_truncation": 583.5,
+  "train_seconds": 5374.064953521,
+  "train_loss": 0.41666834441851464,
+  "accuracy": 0.3051948051948052,
+  "macro_f1_8": 0.2610643756220885,
+  "ece_10_bins_raw": 0.40315831481636344,
+  "ece_note": "Exploratory, uncalibrated softmax over eight label log-likelihoods.",
+  "invalid_count": 0,
+  "inference": "Constrained to the fixed eight-label set using summed label-plus-EOS log-likelihood."
+}

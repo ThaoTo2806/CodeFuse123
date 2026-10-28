@@ -1,6 +1,6 @@
 # Evidence-Aware Fine-Tuning for Faithful Code Change Summarization
 
-> Kế hoạch Hướng B (cải tiến phân loại CHCL): [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md). C3 trên adapter Run 1 đã chạy (Accuracy 0,7799; Macro-F1 0,8384; ECE thô 0,1948); cell kế tiếp là C1 prompt ablation trên model nhỏ: [KAGGLE_C1_PROMPT_ABLATION.md](KAGGLE_C1_PROMPT_ABLATION.md).
+> Kế hoạch Hướng B (cải tiến phân loại CHCL): [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md). C3 đã chạy trên adapter Run 1; C1 pilot validation cho thấy prompt compact tốt hơn prompt gốc trên một seed. Cell tiếp theo là C2 ablation summary-only/diff-only/both: [KAGGLE_C2_INPUT_ABLATION.md](KAGGLE_C2_INPUT_ABLATION.md).
 
 > **Tên làm việc (có thể đổi).** Cụm _"Functionally Hard Negatives"_ chỉ giữ nếu kiểm tra thủ công cho thấy các ví dụ âm thật sự khác chức năng. Nếu không, đổi thành _Category-Filtered Hard Negatives_.
 
