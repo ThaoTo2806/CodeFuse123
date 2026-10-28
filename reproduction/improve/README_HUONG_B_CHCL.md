@@ -42,24 +42,31 @@ Quy tắc tài nguyên: C1/C2/C4 chạy ablation trên một model nhỏ. Dùng 
 
 ## 3. Kế hoạch
 
-### Tuần 1: dựng và sàng lọc
+### Kế hoạch hoàn thành trong 7 ngày
 
-| Ngày | Việc                                                                                                                                                                                             | Đầu ra mong đợi                                                          |
-| :--- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------- |
-| 1    | Dựng harness: cùng tokenizer train/inference, metric cố định 8 nhãn, bootstrap CI và cổng kiểm tra mọi lớp được dự đoán. Khóa revision model. Chạy C3 inference-only trên adapter Run 1 nếu còn. | Metric C3, invalid = 0 theo thiết kế, ECE sơ bộ, revision/model metadata |
-| 2    | C1: dựng prompt rút gọn và so với prompt CHCL gốc trên model nhỏ, một seed.                                                                                                                      | Bảng F1, token và thời gian                                              |
-| 3    | C2: chạy summary-only, diff-only, summary + diff.                                                                                                                                                | Ablation nguồn thông tin                                                 |
-| 4    | C4: thử weighted/focal loss và `subtype` phụ trên tập con.                                                                                                                                       | F1 `fix`/`refactor`, kiểm tra suy biến                                   |
-| 5    | C6: baseline encoder, UniXcoder hoặc CodeBERT.                                                                                                                                                   | Bảng chất lượng và chi phí                                               |
-| 6    | Bootstrap CI, McNemar khi so sánh dự đoán cặp, confusion theo subtype; kiểm tra ví dụ lỗi.                                                                                                       | Bảng thống kê và ví dụ định tính                                         |
-| 7    | Tổng hợp báo cáo cho giảng viên.                                                                                                                                                                 | Slide 8–10 trang và quyết định cấu hình                                  |
+Mục tiêu là hoàn tất **toàn bộ thí nghiệm cải tiến CHCL trong một tuần**, không chỉ pilot. Hãy dùng nhiều tài khoản/session Kaggle song song; mỗi session tối đa 12 giờ. Khi dữ liệu và cấu hình đã khóa, chạy C1/C2, C4, C6 và các seed ở những session độc lập. Mỗi session phải lưu checkpoint, predictions, logs và manifest ra Kaggle Output; không giả định `/kaggle/working` được chia sẻ giữa các session.
 
-### Tuần 2–6: xác nhận và viết
+| Ngày | Việc                                                                                                                                                                                                                                    | Đầu ra mong đợi                                                                                                       |
+| :--- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| 1    | Khóa dữ liệu/split/hash và revision; hoàn thiện harness, metric 8 lớp, bootstrap, ECE và cổng kiểm tra. Khởi chạy các session song song: adapter Run 1/C3, chuẩn bị SLM, encoder và annotation.                                         | Harness + manifest; các session có log/checkpoint riêng. Nếu thiếu adapter, bắt đầu train lại Run 1 trong session 7B. |
+| 2    | Chạy C3 trên adapter Run 1. Trên SLM, chạy baseline CE và C1 prompt gốc/rút gọn; đo độ dài, thời gian và VRAM.                                                                                                                          | C3 metrics; C1 comparison; pilot qua cổng chất lượng.                                                                 |
+| 3    | Chạy đầy đủ C2: summary-only, diff-only, summary + diff; song song tiếp tục các job C1. Chọn cấu hình theo validation, không xem test để chọn.                                                                                          | Ablation C1/C2 và tối đa hai cấu hình ứng viên.                                                                       |
+| 4    | Chạy song song C4: CE, weighted CE, focal loss và `subtype` auxiliary trên cùng SLM/split. Khởi chạy UniXcoder, CodeBERT và code-SLM làm C6 ở các session riêng.                                                                        | Bảng F1 theo lớp, nhất là `fix`/`refactor`; chi phí từng baseline; giữ nhánh qua cổng chất lượng.                     |
+| 5    | Chạy song song seed 0/1/2 cho baseline và cấu hình cải tiến tốt nhất trên validation. Hai người gán nhãn độc lập 100–200 lỗi/bất đồng `fix`/`refactor`.                                                                                 | Tối thiểu ba seed cho hai cấu hình chính; hai bộ nhãn độc lập đã hoàn tất.                                            |
+| 6    | Chốt đối chiếu nhãn và Cohen's κ; chạy test chính thức một lần cho cấu hình đã chốt; bootstrap CI 95%, McNemar trên dự đoán cặp, confusion theo subtype; kiểm tra ví dụ lỗi. Hoàn tất rà soát tài liệu có hệ thống ở mức scope/novelty. | Kết quả test và thống kê; κ; bảng evidence, chi phí, giới hạn và nguồn tài liệu.                                      |
+| 7    | Đối chiếu artifact/metadata, tổng hợp báo cáo và slide 8–10 trang; nêu cấu hình nào được xác nhận, cấu hình nào mới là pilot, quyết định hướng bài.                                                                                     | Bộ kết quả tái lập được và báo cáo cho cô; không biến giả thuyết thành kết luận.                                      |
 
-1. Chạy ≥3 seed hoặc 5-fold cho các cấu hình chính; chạy 7B một lần cho cấu hình cuối đã chọn.
-2. Audit nhãn `fix`/`refactor`; hai người gán nhãn độc lập và tính Cohen's κ.
-3. Rà soát tài liệu có hệ thống để xác nhận tính mới về dữ liệu và phương pháp.
-4. Viết bản thảo; công bố mã, split/manifest và metadata gồm dtype, seed, revision, cấu hình lượng tử hóa.
+### Tổ chức nhiều session Kaggle
+
+- Mỗi session tối đa 12 giờ. Gán một job/configuration cho mỗi session, đặt tên thư mục output riêng và lưu command, seed, split hash, model/tokenizer revision, dtype, quantization, log, predictions, metrics và checkpoint.
+- Upload artifact cần giữ lại thành Kaggle Dataset hoặc tải về trước khi session kết thúc; không dựa vào việc các tài khoản/session nhìn thấy cùng `/kaggle/working`.
+- Luồng 7B chỉ chạy C3 inference trên adapter Run 1. Nếu adapter không có, dùng một session riêng để train lại Run 1 theo đúng cấu hình đã xác minh rồi mới chạy C3; không dùng Run 2 thay thế.
+- Chạy selection trên validation. Test 518 mẫu chỉ mở một lần cho các cấu hình chốt trước; không tinh chỉnh dựa trên test.
+- Nếu một run không qua cổng (loss không hữu hạn, output rỗng/lặp, lớp không được dự đoán), dừng nhánh đó và không nhân bản sang nhiều seed.
+
+### Phạm vi và tính thực tế
+
+Kế hoạch này đặt mục tiêu chạy tất cả nhánh C1–C6 trong tuần nhờ song song hóa; nếu quota/session hoặc cài đặt không ổn định, ưu tiên theo thứ tự: harness/C3, C1+C2, C4, ba seed cho baseline và cấu hình tốt nhất, thống kê, rồi mới thêm code-SLM/subtype. Ba seed là mức xác nhận tối thiểu cho cấu hình chính; các ablation phụ có thể chỉ có một seed và phải được gọi là thăm dò. Hoàn thành thí nghiệm và báo cáo trong tuần không đồng nghĩa bài báo đã sẵn sàng nộp hoặc Q3 được bảo đảm.
 
 ## 4. Cell Kaggle: Ngày 1, C3 trên adapter Run 1
 
