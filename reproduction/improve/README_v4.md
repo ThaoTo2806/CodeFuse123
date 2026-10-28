@@ -1,5 +1,7 @@
 # Evidence-Aware Fine-Tuning for Faithful Code Change Summarization
 
+> Kế hoạch Hướng B (cải tiến phân loại CHCL), gồm mốc công việc và cell Kaggle C3: [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md).
+
 > **Tên làm việc (có thể đổi).** Cụm _"Functionally Hard Negatives"_ chỉ giữ nếu kiểm tra thủ công cho thấy các ví dụ âm thật sự khác chức năng. Nếu không, đổi thành _Category-Filtered Hard Negatives_.
 
 **Trạng thái (28/10/2026):** đã hoàn thành reproduction pipeline HQCM ở task phân loại, audit dữ liệu và đo độ dài token. **Chưa** có baseline cho task tạo câu mô tả. Mọi nội dung trong mục "Giả thuyết" vẫn là giả thuyết cần kiểm chứng.
@@ -101,7 +103,7 @@ Thêm: chỉ 0,17% diff train vượt 1.024 token; p95 = 546, p99 = 716 token. W
 | 7   | Đánh giá thủ công độc lập quy mô lớn (≥150–200 mẫu, 2 người, Cohen's κ)                                                                                                                                                      | Cao        | Bằng chứng chính cho độ trung thực                       |
 | 8   | Mở rộng: ≥3 seed, kiểm định thống kê, model thứ hai, UL                                                                                                                                                                      | Cao        | Bản thảo                                                 |
 
-**Cell Kaggle cho bước 2:** [KAGGLE_STEP2_MANUAL_LABELING.md](KAGGLE_STEP2_MANUAL_LABELING.md). Cell lấy 50 mẫu có định danh bị flag và 50 mẫu coverage thấp, xuất CSV để điền bốn nhãn thủ công. Các cờ tự động chỉ dùng để lấy mẫu, không phải kết luận bịa.
+**Cell Kaggle cho bước 2:** [KAGGLE_STEP2_MANUAL_LABELING.md](KAGGLE_STEP2_MANUAL_LABELING.md). Cell đã được chạy và CSV mẫu nằm tại `improve_step2_manual_labeling/manual_labels_100.csv`. Cell lấy 50 mẫu có định danh bị flag và 50 mẫu coverage thấp; các cờ tự động chỉ dùng để lấy mẫu, không phải kết luận bịa. **Phần con người gán nhãn 100 mẫu và tổng hợp kết quả vẫn chưa hoàn thành.**
 
 **Cổng quyết định A/B (sau bước 2):**
 

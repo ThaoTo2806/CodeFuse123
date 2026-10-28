@@ -36,7 +36,7 @@ import re
 
 import pandas as pd
 
-DATA_DIR = None  # Vi du: Path("/kaggle/input/hqcm/dataset")
+DATA_DIR = None  # # Example: Path("/kaggle/input/hqcm/dataset")
 OUTPUT_DIR = Path("/kaggle/working/improve_step2_manual_labeling")
 RANDOM_SEED = 42
 UNSUPPORTED_IDENTIFIER_SAMPLES = 50
@@ -58,10 +58,10 @@ STOPWORDS = {
     "these", "this", "those", "to", "was", "were", "will", "with",
 }
 LABEL_VALUES = [
-    "bịa thật",
-    "khái niệm hợp lệ",
-    "ngữ cảnh ngoài diff",
-    "khác",
+    "hallucination",
+    "valid concept",
+    "context outside diff",
+    "other",
 ]
 
 
@@ -112,9 +112,10 @@ for directory in candidate_dirs:
 
 if not valid_datasets:
     raise FileNotFoundError(
-        "Khong tim thay dataset HQCM goc co train.json/test.json va "
-        "cac truong change, summaries.en, type. Hay gan DATA_DIR."
-    )
+    "Could not find the original HQCM dataset containing "
+    "train.json/test.json and the required fields "
+    "change, summaries.en, and type. Please set DATA_DIR."
+)
 
 if len(valid_datasets) > 1:
     official_size = [
@@ -126,9 +127,10 @@ if len(valid_datasets) > 1:
     else:
         found_dirs = [str(item[0]) for item in valid_datasets]
         raise RuntimeError(
-            "Tim thay nhieu bo dataset HQCM. Hay gan DATA_DIR ro rang: "
-            + ", ".join(found_dirs)
-        )
+    "Multiple HQCM datasets were found. Please set DATA_DIR "
+    "to the intended dataset directory: "
+    + ", ".join(found_dirs)
+)
 
 dataset_dir, train_rows, test_rows = valid_datasets[0]
 print(f"Dataset: {dataset_dir}")
@@ -190,9 +192,9 @@ for split_name, rows in (("train", train_rows), ("test", test_rows)):
 unsupported_pool = [record for record in records if record["unmatched_identifiers"]]
 if len(unsupported_pool) < UNSUPPORTED_IDENTIFIER_SAMPLES:
     raise ValueError(
-        f"Chi co {len(unsupported_pool)} mau co identifier bi flag; "
-        f"khong du {UNSUPPORTED_IDENTIFIER_SAMPLES} mau."
-    )
+    f"Only {len(unsupported_pool)} samples have flagged identifiers; "
+    f"{UNSUPPORTED_IDENTIFIER_SAMPLES} samples are required."
+)
 
 random_generator = random.Random(RANDOM_SEED)
 unsupported_selected = random_generator.sample(
@@ -201,7 +203,8 @@ unsupported_selected = random_generator.sample(
 )
 selected_ids = {record["sample_id"] for record in unsupported_selected}
 
-# Nhóm phủ từ thấp không có identifier bị flag, để hai nhóm dễ phân biệt.
+# The low-coverage group excludes samples with flagged identifiers
+# to keep the two sampling groups distinct.
 low_coverage_pool = [
     record for record in records
     if not record["unmatched_identifiers"]
@@ -209,9 +212,10 @@ low_coverage_pool = [
 ]
 if len(low_coverage_pool) < LOW_COVERAGE_SAMPLES:
     raise ValueError(
-        f"Chi co {len(low_coverage_pool)} mau khong trung co identifier bi flag; "
-        f"khong du {LOW_COVERAGE_SAMPLES} mau cho nhom coverage thap."
-    )
+    f"Only {len(low_coverage_pool)} samples without flagged identifiers "
+    f"are available; {LOW_COVERAGE_SAMPLES} samples are required "
+    "for the low-coverage group."
+)
 
 low_coverage_selected = sorted(
     low_coverage_pool,
@@ -251,9 +255,9 @@ assert annotation_df["sample_id"].nunique() == 100
 output_path = OUTPUT_DIR / "manual_labels_100.csv"
 annotation_df.to_csv(output_path, index=False, encoding="utf-8-sig")
 print(annotation_df.groupby("sampling_group").size())
-print("CSV de dien nhan:", output_path)
-print("Seed:", RANDOM_SEED)
-print("Nhan hop le:", LABEL_VALUES)
+print("Annotation CSV:", output_path)
+print("Random seed:", RANDOM_SEED)
+print("Valid labels:", LABEL_VALUES)
 ```
 
 Sau khi điền `human_label`, có thể lưu CSV và upload lại vào Kaggle để tổng hợp. Không cần gửi lại diff hoặc summary riêng; chúng đã nằm trong mỗi dòng của file.

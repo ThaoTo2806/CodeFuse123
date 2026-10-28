@@ -1,0 +1,1898 @@
+﻿sample_id,sampling_group,split,row_index,type,subtype,summary_en,diff,unmatched_identifiers_heuristic,lexical_coverage_heuristic,summary_terms_not_found_in_diff,human_label,annotator_note
+test:317,unsupported_identifier,test,317,fix,I11,Avoid deadlock between PMS and AppOpsService,"diff --git a/services/core/java/com/android/server/MountService.java b/services/core/java/com/android/server/MountService.java
+index 92b98a7..ed136e9 100644
+--- a/services/core/java/com/android/server/MountService.java
++++ b/services/core/java/com/android/server/MountService.java
+@@ -3431,6 +3431,11 @@ class MountService extends IMountService.Stub
+         }
+ 
+         public boolean hasExternalStorage(int uid, String packageName) {
++            // No need to check for system uid. This avoids a deadlock between
++            // PackageManagerService and AppOpsService.
++            if (uid == Process.SYSTEM_UID) {
++                return true;
++            }
+             // No locking - CopyOnWriteArrayList
+             for (ExternalStorageMountPolicy policy : mPolicies) {
+                 final boolean policyHasStorage = policy.hasExternalStorage(uid, packageName);
+",PMS,0.6,avoid; pms,,
+train:691,unsupported_identifier,train,691,feat,Ex,Add JOL to the allowed SPI class list,"diff --git a/presto-main/src/main/java/com/facebook/presto/server/PluginManager.java b/presto-main/src/main/java/com/facebook/presto/server/PluginManager.java
+index 7d0eb26..6fa4ff5 100644
+--- a/presto-main/src/main/java/com/facebook/presto/server/PluginManager.java
++++ b/presto-main/src/main/java/com/facebook/presto/server/PluginManager.java
+@@ -69,6 +69,7 @@ public class PluginManager
+             .add(""com.fasterxml.jackson.annotation."")
+             .add(""io.airlift.slice."")
+             .add(""io.airlift.units."")
++            .add(""org.openjdk.jol."")
+             .build();
+ 
+     private static final Logger log = Logger.get(PluginManager.class);
+",SPI,0.5,allowed; spi; list,,
+train:174,unsupported_identifier,train,174,feat,E2,Avoid potential NullPointerException when saving site settings,"diff --git a/WordPress/src/main/java/org/wordpress/android/models/SiteSettingsModel.java b/WordPress/src/main/java/org/wordpress/android/models/SiteSettingsModel.java
+index 24f2a81ed..71f15d8be 100644
+--- a/WordPress/src/main/java/org/wordpress/android/models/SiteSettingsModel.java
++++ b/WordPress/src/main/java/org/wordpress/android/models/SiteSettingsModel.java
+@@ -293,12 +293,16 @@ public class SiteSettingsModel {
+         values.put(WHITELIST_COLUMN_NAME, commentAutoApprovalKnownUsers);
+ 
+         String moderationKeys = """";
+-        for (String key : holdForModeration) {
+-            moderationKeys += key + ""\n"";
++        if (holdForModeration != null) {
++            for (String key : holdForModeration) {
++                moderationKeys += key + ""\n"";
++            }
+         }
+         String blacklistKeys = """";
+-        for (String key : blacklist) {
+-            blacklistKeys += key + ""\n"";
++        if (blacklist != null) {
++            for (String key : blacklist) {
++                blacklistKeys += key + ""\n"";
++            }
+         }
+         values.put(MODERATION_KEYS_COLUMN_NAME, moderationKeys);
+         values.put(BLACKLIST_KEYS_COLUMN_NAME, blacklistKeys);
+",NullPointerException,0.0,avoid; potential; nullpointerexception; when; saving; site; settings,,
+train:2062,unsupported_identifier,train,2062,fix,I5,"Due to the possibility that JiveGlobal#homeDirectory may not be initialized, the static variable pluginsDirectory is being deleted","diff --git a/src/java/org/jivesoftware/messenger/container/PluginServlet.java b/src/java/org/jivesoftware/messenger/container/PluginServlet.java
+index 166f09a5c..d1acd95f3 100644
+--- a/src/java/org/jivesoftware/messenger/container/PluginServlet.java
++++ b/src/java/org/jivesoftware/messenger/container/PluginServlet.java
+@@ -55,13 +55,11 @@ import java.util.concurrent.ConcurrentHashMap;
+ public class PluginServlet extends HttpServlet {
+ 
+     private static Map<String, HttpServlet> servlets;
+-    private static File pluginDirectory;
+     private static PluginManager pluginManager;
+     private static ServletConfig servletConfig;
+ 
+     static {
+         servlets = new ConcurrentHashMap<String, HttpServlet>();
+-        pluginDirectory = new File(JiveGlobals.getHomeDirectory(), ""plugins"");
+     }
+ 
+     public void init(ServletConfig config) throws ServletException {
+@@ -303,6 +301,7 @@ public class PluginServlet extends HttpServlet {
+             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+             return;
+         }
++        File pluginDirectory = new File(JiveGlobals.getHomeDirectory(), ""plugins"");
+         File image = new File(pluginDirectory, parts[1] + File.separator + ""web"" +
+                 File.separator + ""images"" + File.separator + parts[3]);
+         if (!image.exists()) {
+",pluginsDirectory,0.0909,due; possibility; jiveglobal; homedirectory; may; not; initialized; variable; pluginsdirectory; deleted,,
+train:1701,unsupported_identifier,train,1701,refactor,R3,Change ISlideBackgroundHolder to public,"diff --git a/library/src/main/java/com/github/paolorotolo/appintro/ISlideBackgroundColorHolder.java b/library/src/main/java/com/github/paolorotolo/appintro/ISlideBackgroundColorHolder.java
+index 29fd44f..9ef0488 100644
+--- a/library/src/main/java/com/github/paolorotolo/appintro/ISlideBackgroundColorHolder.java
++++ b/library/src/main/java/com/github/paolorotolo/appintro/ISlideBackgroundColorHolder.java
+@@ -2,7 +2,7 @@ package com.github.paolorotolo.appintro;
+ 
+ import android.support.annotation.ColorInt;
+ 
+-interface ISlideBackgroundColorHolder {
++public interface ISlideBackgroundColorHolder {
+     /**
+      * Returns the default background color of the slide
+      *
+",ISlideBackgroundHolder,0.3333,change; islidebackgroundholder,,
+train:1569,unsupported_identifier,train,1569,fix,Ix,Modified the HTML code in the SummaryPage class,"diff --git a/src/main/java/water/api/SummaryPage.java b/src/main/java/water/api/SummaryPage.java
+index e24810b9b..ff98ba352 100644
+--- a/src/main/java/water/api/SummaryPage.java
++++ b/src/main/java/water/api/SummaryPage.java
+@@ -56,8 +56,8 @@ public class SummaryPage extends Request {
+     Response r = Response.done(res);
+     r.setBuilder(ROOT_OBJECT, new Builder() {
+       @Override public String build(Response response, JsonElement element, String contextName) {
+-        StringBuilder pageBldr = new StringBuilder(""<div class=container-fluid'><div class='row-fluid'><div class='span2' style='text-align:right;overflow-x:scroll;'><h5>Columns</h5>"");
+-        StringBuilder sb = new StringBuilder(""<div class='span10' style='height:90%;overflow-y:scroll'>"");
++        StringBuilder pageBldr = new StringBuilder(""<div class=container-fluid'><div class='row-fluid'><div class='span2' style='overflow-y:scroll;height:100%;left:0;position:fixed;text-align:right;overflow-x:scroll;'><h5>Columns</h5>"");
++        StringBuilder sb = new StringBuilder(""<div class='span10' style='float:right;height:90%;overflow-y:scroll'>"");
+         JsonArray cols = element.getAsJsonObject().get(""summary"").getAsJsonObject().get(""columns"").getAsJsonArray();
+         Iterator<JsonElement> it = cols.iterator();
+ 
+",HTML,0.4,modified; html; code,,
+train:937,unsupported_identifier,train,937,docs,D2,Add @ApiVis.annotate,"diff --git a/src/main/java/org/jboss/netty/channel/ChannelFactoryExecutorResource.java b/src/main/java/org/jboss/netty/channel/ChannelFactoryExecutorResource.java
+index 3f2bf2c..2cadf30 100644
+--- a/src/main/java/org/jboss/netty/channel/ChannelFactoryExecutorResource.java
++++ b/src/main/java/org/jboss/netty/channel/ChannelFactoryExecutorResource.java
+@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
+  * @author The Netty Project (netty-dev@lists.jboss.org)
+  * @author Trustin Lee (tlee@redhat.com)
+  * @version $Rev$, $Date$
++ *
++ * @apiviz.exclude
+  */
+ public class ChannelFactoryExecutorResource implements
+         ChannelFactoryResource {
+",ApiVis,0.0,add; apivis; annotate,,
+train:676,unsupported_identifier,train,676,feat,E1,Added comparison of new and old article IDs,"diff --git a/src/org/wordpress/android/ui/posts/adapters/PostsListAdapter.java b/src/org/wordpress/android/ui/posts/adapters/PostsListAdapter.java
+index 8279e9dfd..a71f6a27b 100644
+--- a/src/org/wordpress/android/ui/posts/adapters/PostsListAdapter.java
++++ b/src/org/wordpress/android/ui/posts/adapters/PostsListAdapter.java
+@@ -231,6 +231,8 @@ public class PostsListAdapter extends BaseAdapter {
+             PostsListPost newPost = newPostsList.get(i);
+             PostsListPost currentPost = mPosts.get(i);
+ 
++            if (!(newPost.getPostId() == currentPost.getPostId()))
++                return false;
+             if (!newPost.getTitle().equals(currentPost.getTitle()))
+                 return false;
+             if (!(newPost.getDateCreatedGmt() == currentPost.getDateCreatedGmt()))
+",IDs,0.0,added; comparison; new; old; article; ids,,
+train:4363,unsupported_identifier,train,4363,feat,E2,Added null check before calling containsKey to prevent NPE,"diff --git a/components/camel-hazelcast/src/main/java/org/apache/camel/processor/aggregate/hazelcast/HazelcastAggregationRepository.java b/components/camel-hazelcast/src/main/java/org/apache/camel/processor/aggregate/hazelcast/HazelcastAggregationRepository.java
+index 33185f0df0..9dd0c17c33 100644
+--- a/components/camel-hazelcast/src/main/java/org/apache/camel/processor/aggregate/hazelcast/HazelcastAggregationRepository.java
++++ b/components/camel-hazelcast/src/main/java/org/apache/camel/processor/aggregate/hazelcast/HazelcastAggregationRepository.java
+@@ -296,7 +296,10 @@ public class HazelcastAggregationRepository extends ServiceSupport
+      * @param key Object - key in question
+      */
+     public boolean containsKey(Object key){
++      if(cache != null)
+         return cache.containsKey(key);
++      else
++        return false;
+     }
+     
+     public boolean isAllowSerializedHeaders() {
+",NPE,0.25,added; check; before; calling; prevent; npe,,
+train:564,unsupported_identifier,train,564,docs,D2,Improved the JavaDoc for Subscription,"diff --git a/aeron-client/src/main/java/uk/co/real_logic/aeron/Subscription.java b/aeron-client/src/main/java/uk/co/real_logic/aeron/Subscription.java
+index e3cd7a0..638aa2a 100644
+--- a/aeron-client/src/main/java/uk/co/real_logic/aeron/Subscription.java
++++ b/aeron-client/src/main/java/uk/co/real_logic/aeron/Subscription.java
+@@ -24,7 +24,9 @@ import java.util.Arrays;
+ import java.util.List;
+ 
+ /**
+- * Aeron Subscriber API for receiving {@link Image}s of messages from publishers on a given channel and streamId pair.
++ * Aeron Subscriber API for receiving a reconstructed {@link Image} for a stream of messages from publishers on
++ * a given channel and streamId pair.
++ * <p>
+  * Subscribers are created via an {@link Aeron} object, and received messages are delivered
+  * to the {@link FragmentHandler}.
+  * <p>
+@@ -121,6 +123,8 @@ public class Subscription implements AutoCloseable
+     /**
+      * Poll the {@link Image}s under the subscription for available message fragments in blocks.
+      *
++     * This method is useful for operations like bulk archiving and messaging indexing.
++     *
+      * @param blockHandler     to receive a block of fragments from each {@link Image}.
+      * @param blockLengthLimit for each individual block.
+      * @return the number of bytes consumed.
+@@ -142,6 +146,8 @@ public class Subscription implements AutoCloseable
+     /**
+      * Poll the {@link Image}s under the subscription for available message fragments in blocks.
+      *
++     * This method is useful for operations like bulk archiving a stream to file.
++     *
+      * @param fileBlockHandler to receive a block of fragments from each {@link Image}.
+      * @param blockLengthLimit for each individual block.
+      * @return the number of bytes consumed.
+",JavaDoc,0.3333,improved; javadoc,,
+test:38,unsupported_identifier,test,38,fix,I2,Disable HSM debugging in DataConnection for more detailed viewing,"diff --git a/telephony/java/com/android/internal/telephony/DataConnection.java b/telephony/java/com/android/internal/telephony/DataConnection.java
+index 99d5520..cf06173 100644
+--- a/telephony/java/com/android/internal/telephony/DataConnection.java
++++ b/telephony/java/com/android/internal/telephony/DataConnection.java
+@@ -274,7 +274,7 @@ public abstract class DataConnection extends HierarchicalStateMachine {
+ 
+         clearSettings();
+ 
+-        setDbg(true);
++        setDbg(false);
+         addState(mDefaultState);
+             addState(mInactiveState, mDefaultState);
+             addState(mActivatingState, mDefaultState);
+",HSM,0.1429,disable; hsm; debugging; more; detailed; viewing,,
+train:3226,unsupported_identifier,train,3226,cicd,C1,Added a new testing phase in the CICD pipeline,"diff --git a/.gitlab-ci.yml b/.gitlab-ci.yml
+index 1a2b3c4..d5e6f78 100644
+--- a/.gitlab-ci.yml
++++ b/.gitlab-ci.yml
+@@ -20,6 +20,11 @@ stages:
+   - test
+   - deploy
+
++new_test_stage:
++  stage: test
++  script:
++    - echo ""Running new tests""
++    - run-new-tests.sh
+
+ existing_test_stage:
+   stage: test",CICD,0.1667,added; testing; phase; cicd; pipeline,,
+train:192,unsupported_identifier,train,192,refactor,R3,"Add comments, rearrange headerIds instead of clearing all items","diff --git a/library/src/main/java/com/eowise/recyclerview/stickyheaders/StickyHeadersItemDecoration.java b/library/src/main/java/com/eowise/recyclerview/stickyheaders/StickyHeadersItemDecoration.java
+index 963a1cb..733670e 100644
+--- a/library/src/main/java/com/eowise/recyclerview/stickyheaders/StickyHeadersItemDecoration.java
++++ b/library/src/main/java/com/eowise/recyclerview/stickyheaders/StickyHeadersItemDecoration.java
+@@ -47,7 +47,6 @@ public class StickyHeadersItemDecoration extends RecyclerView.ItemDecoration {
+         final int childCount = parent.getChildCount();
+         final RecyclerView.LayoutManager lm = parent.getLayoutManager();
+         View header = headerViewHolder.itemView;
+-        Transformation outTransformation = new Transformation();
+         Long currentHeaderId;
+         Float lastY = null;
+ 
+@@ -152,12 +151,18 @@ public class StickyHeadersItemDecoration extends RecyclerView.ItemDecoration {
+         return headersIds.get(dataSetPosition);
+     }
+ 
++    // TODO: rearrange headersIds instead of clearing all items
+     private class AdapterDataObserver extends RecyclerView.AdapterDataObserver {
+ 
+         @Override
+         public void onItemRangeRemoved(int positionStart, int itemCount) {
+             headersIds.clear();
+         }
++
++        @Override
++        public void onItemRangeInserted(int positionStart, int itemCount) {
++            headersIds.clear();
++        }
+     }
+ 
+ }
+",headerIds,0.625,add; comments; headerids,,
+train:185,unsupported_identifier,train,185,cicd,Cx,Update the CICD configuration for building and deploying to the production environment,"diff --git a/.ci-cd-config.yml b/.ci-cd-config.yml
+index 83b711f..c4d87a9 100644
+--- a/.ci-cd-config.yml
++++ b/.ci-cd-config.yml
+@@ -10,7 +10,7 @@
+   BUILD_SCRIPT: build.sh
+   DEPLOY_SCRIPT: deploy.sh
+
+-build:
++build_production:
+   script:
+     - echo ""Executing build script...""
+     - ./$BUILD_SCRIPT
+@@ -22,10 +22,12 @@
+   only:
+     - master
+
+-deploy:
++deploy_to_production:
+   script:
+     - echo ""Deploying to production...""
+     - ./$DEPLOY_SCRIPT
++  after_script:
++    - echo ""Deployment to production completed.""
+   only:
+     - master
+     - tags
+@@ -35,3 +37,5 @@
+     DEPLOYMENT_FOLDER: /var/www/html
+     TEST_SERVER: test.example.com
+ 
++environment:
++  PRODUCTION_SERVER: prod.example.com",CICD,0.4286,update; cicd; configuration; building,,
+train:571,unsupported_identifier,train,571,feat,Ex,Fixed NPE issue when localHost is not found,"diff --git a/src/net/java/sip/communicator/impl/netaddr/NetworkAddressManagerServiceImpl.java b/src/net/java/sip/communicator/impl/netaddr/NetworkAddressManagerServiceImpl.java
+index 260ddffae..55893a5ca 100644
+--- a/src/net/java/sip/communicator/impl/netaddr/NetworkAddressManagerServiceImpl.java
++++ b/src/net/java/sip/communicator/impl/netaddr/NetworkAddressManagerServiceImpl.java
+@@ -300,6 +300,18 @@ public class NetworkAddressManagerServiceImpl
+         //windows socket implementations return the any address so we need to
+         //find something else here ... InetAddress.getLocalHost seems to work
+         //better on windows so lets hope it'll do the trick.
++
++        if (localHost == null)
++        {
++            try
++            {
++                localHost = InetAddress.getLocalHost();
++            }
++            catch (UnknownHostException e)
++            {
++                logger.warn(""Failed to get localhost "", e);
++            }
++        }
+         if( localHost.isAnyLocalAddress())
+         {
+             if (logger.isTraceEnabled())
+@@ -491,7 +503,7 @@ public class NetworkAddressManagerServiceImpl
+             return new InetSocketAddress(getLocalHost(dst), port);
+         }
+         StunAddress mappedAddress = queryStunServer(port);
+-        InetSocketAddress result = null;
++        InetSocketAddress result;
+         if (mappedAddress != null)
+             result = mappedAddress.getSocketAddress();
+         else
+@@ -657,7 +669,6 @@ public class NetworkAddressManagerServiceImpl
+                 {
+                     logger.fatal(""An exception occurred while trying to create""
+                                  + ""a local host discovery socket."", exc);
+-                    resultSocket = null;
+                     return null;
+                 }
+                 //port seems to be taken. try another one.
+",NPE,0.1429,fixed; npe; issue; when; not; found,,
+train:1555,unsupported_identifier,train,1555,fix,I9,"When writing JSON, do not record EofExceptions","diff --git a/dropwizard/src/main/java/com/yammer/dropwizard/jersey/JacksonMessageBodyProvider.java b/dropwizard/src/main/java/com/yammer/dropwizard/jersey/JacksonMessageBodyProvider.java
+index 9e64768..5e139d8 100644
+--- a/dropwizard/src/main/java/com/yammer/dropwizard/jersey/JacksonMessageBodyProvider.java
++++ b/dropwizard/src/main/java/com/yammer/dropwizard/jersey/JacksonMessageBodyProvider.java
+@@ -3,6 +3,7 @@ package com.yammer.dropwizard.jersey;
+ import com.google.common.collect.ImmutableList;
+ import com.yammer.dropwizard.json.Json;
+ import com.yammer.dropwizard.validation.Validator;
++import org.eclipse.jetty.io.EofException;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+@@ -113,6 +114,8 @@ public class JacksonMessageBodyProvider implements MessageBodyReader<Object>,
+                         OutputStream entityStream) throws IOException, WebApplicationException {
+         try {
+             Json.write(entityStream, t);
++        } catch (EofException ignored) {
++            // we don't care about these
+         } catch (IOException e) {
+             LOGGER.error(""Error writing response"", e);
+         }
+",EofExceptions,0.2857,when; do; not; record; eofexceptions,,
+train:1649,unsupported_identifier,train,1649,docs,D2,"Update recoverInline documentation, suggest not to use","diff --git a/runtime/Java/src/org/antlr/v4/runtime/ANTLRErrorStrategy.java b/runtime/Java/src/org/antlr/v4/runtime/ANTLRErrorStrategy.java
+index ff1ebf02f..f64d88bf1 100644
+--- a/runtime/Java/src/org/antlr/v4/runtime/ANTLRErrorStrategy.java
++++ b/runtime/Java/src/org/antlr/v4/runtime/ANTLRErrorStrategy.java
+@@ -63,6 +63,9 @@ public interface ANTLRErrorStrategy {
+ 	 * returns the {@link Token} instance which should be treated as the
+ 	 * successful result of the match.
+ 	 *
++   * <p>This method handles the consumption of any tokens - the caller should
++	 * <b>not</b> call {@link Parser#consume} after a successful recovery.</p>
++	 *
+ 	 * <p>Note that the calling code will not report an error if this method
+ 	 * returns successfully. The error strategy implementation is responsible
+ 	 * for calling {@link Parser#notifyErrorListeners} as appropriate.</p>
+",recoverInline,0.1667,update; recoverinline; documentation; suggest; use,,
+train:4022,unsupported_identifier,train,4022,feat,E1,Handling possible NPE when extracting WAR resources to a new directory,"diff --git a/src/main/java/com/gitblit/servlet/GitblitContext.java b/src/main/java/com/gitblit/servlet/GitblitContext.java
+index fb8f6b9d..750da796 100644
+--- a/src/main/java/com/gitblit/servlet/GitblitContext.java
++++ b/src/main/java/com/gitblit/servlet/GitblitContext.java
+@@ -24,6 +24,7 @@ import java.io.OutputStream;
+ import java.text.MessageFormat;
+ import java.util.ArrayList;
+ import java.util.List;
++import java.util.Set;
+ 
+ import javax.naming.Context;
+ import javax.naming.InitialContext;
+@@ -455,7 +456,12 @@ public class GitblitContext extends GuiceServletContextListener {
+ 	}
+ 
+ 	protected void extractResources(ServletContext context, String path, File toDir) {
+-		for (String resource : context.getResourcePaths(path)) {
++		Set<String> resources = context.getResourcePaths(path);
++		if (resources == null) {
++			logger.warn(""There are no WAR resources to extract from {}"", path);
++			return;
++		}
++		for (String resource : resources) {
+ 			// extract the resource to the directory if it does not exist
+ 			File f = new File(toDir, resource.substring(path.length()));
+ 			if (!f.exists()) {
+",NPE,0.4444,handling; possible; npe; when; extracting,,
+test:56,unsupported_identifier,test,56,feat,E1,Prevent NPE when session does not exist,"diff --git a/src/main/java/com/commafeed/frontend/pages/HomePage.java b/src/main/java/com/commafeed/frontend/pages/HomePage.java
+index 17c801ac..165cc612 100644
+--- a/src/main/java/com/commafeed/frontend/pages/HomePage.java
++++ b/src/main/java/com/commafeed/frontend/pages/HomePage.java
+@@ -4,6 +4,7 @@ import org.apache.wicket.markup.head.CssHeaderItem;
+ import org.apache.wicket.markup.head.IHeaderResponse;
+ import org.apache.wicket.request.mapper.parameter.PageParameters;
+ 
++import com.commafeed.backend.model.User;
+ import com.commafeed.backend.model.UserRole.Role;
+ import com.commafeed.backend.model.UserSettings;
+ import com.commafeed.frontend.CommaFeedSession;
+@@ -21,7 +22,11 @@ public class HomePage extends BasePage {
+ 		response.render(CssHeaderItem.forReference(new UserCustomCssReference() {
+ 			@Override
+ 			protected String getCss() {
+-				UserSettings settings = userSettingsDAO.findByUser(CommaFeedSession.get().getUser());
++				User user = CommaFeedSession.get().getUser();
++				if (user == null) {
++					return null;
++				}
++				UserSettings settings = userSettingsDAO.findByUser(user);
+ 				return settings == null ? null : settings.getCustomCss();
+ 			}
+ 		}, new PageParameters().add(""_t"", System.currentTimeMillis()), null));
+",NPE,0.0,prevent; npe; when; session; does; not; exist,,
+test:487,unsupported_identifier,test,487,feat,E2,Skipping validation for camel-linkedin and camel-salesforce due to their presence in the same component folder with both API and component,"diff --git a/tooling/maven/camel-package-maven-plugin/src/main/java/org/apache/camel/maven/packaging/PrepareCatalogMojo.java b/tooling/maven/camel-package-maven-plugin/src/main/java/org/apache/camel/maven/packaging/PrepareCatalogMojo.java
+index 5b3cd5c4bd..ae1ab13126 100644
+--- a/tooling/maven/camel-package-maven-plugin/src/main/java/org/apache/camel/maven/packaging/PrepareCatalogMojo.java
++++ b/tooling/maven/camel-package-maven-plugin/src/main/java/org/apache/camel/maven/packaging/PrepareCatalogMojo.java
+@@ -863,7 +863,7 @@ public class PrepareCatalogMojo extends AbstractMojo {
+                 component = ""ftp"";
+             } 
+             String name = component + ""-component"";
+-            if (!docs.contains(name)) {
++            if (!docs.contains(name) && (!component.equalsIgnoreCase(""linkedin"") && !component.equalsIgnoreCase(""salesforce""))) {
+                 missing.add(name);
+             }
+         }
+",API,0.4286,skipping; validation; due; presence; same; folder; both; api,,
+train:4493,unsupported_identifier,train,4493,feat,E2,Added check for whether the URLs are the same,"diff --git a/ReactAndroid/src/main/java/com/facebook/react/views/webview/ReactWebViewManager.java b/ReactAndroid/src/main/java/com/facebook/react/views/webview/ReactWebViewManager.java
+index 19d394b..2eb92ba 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/views/webview/ReactWebViewManager.java
++++ b/ReactAndroid/src/main/java/com/facebook/react/views/webview/ReactWebViewManager.java
+@@ -329,6 +329,10 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
+       }
+       if (source.hasKey(""uri"")) {
+         String url = source.getString(""uri"");
++        String previousUrl = view.getUrl();
++        if (previousUrl != null && previousUrl.equals(url)) {
++          return;
++        }
+         if (source.hasKey(""method"")) {
+           String method = source.getString(""method"");
+           if (method.equals(HTTP_METHOD_POST)) {
+",URLs,0.0,added; check; whether; urls; same,,
+train:1433,unsupported_identifier,train,1433,fix,I4,Fix the issue where CTL titles sometimes do not display,"diff --git a/design/src/android/support/design/widget/CollapsingToolbarLayout.java b/design/src/android/support/design/widget/CollapsingToolbarLayout.java
+index 0ae7f7c09..6d95decb5 100644
+--- a/design/src/android/support/design/widget/CollapsingToolbarLayout.java
++++ b/design/src/android/support/design/widget/CollapsingToolbarLayout.java
+@@ -453,7 +453,7 @@ public class CollapsingToolbarLayout extends FrameLayout {
+                 // Update the expanded bounds
+                 mCollapsingTextHelper.setExpandedBounds(
+                         isRtl ? mExpandedMarginEnd : mExpandedMarginStart,
+-                        mTmpRect.bottom + mExpandedMarginTop,
++                        mExpandedMarginTop,
+                         right - left - (isRtl ? mExpandedMarginStart : mExpandedMarginEnd),
+                         bottom - top - mExpandedMarginBottom);
+                 // Now recalculate using the new bounds
+",CTL,0.0,fix; issue; where; ctl; titles; sometimes; do; not; display,,
+test:319,unsupported_identifier,test,319,refactor,R3,EvaluateTreebank should return null for unavailable parses,"diff --git a/src/edu/stanford/nlp/parser/shiftreduce/ShiftReduceParserQuery.java b/src/edu/stanford/nlp/parser/shiftreduce/ShiftReduceParserQuery.java
+index 09d0ff0..09d2690 100644
+--- a/src/edu/stanford/nlp/parser/shiftreduce/ShiftReduceParserQuery.java
++++ b/src/edu/stanford/nlp/parser/shiftreduce/ShiftReduceParserQuery.java
+@@ -105,12 +105,12 @@ public class ShiftReduceParserQuery implements ParserQuery {
+ 
+   @Override
+   public Tree getBestDependencyParse(boolean debinarize) {
+-    throw new UnsupportedOperationException();
++    return null;
+   }
+ 
+   @Override
+   public Tree getBestFactoredParse() {
+-    throw new UnsupportedOperationException();
++    return null;
+   }
+ 
+   /** TODO: if this is a beam, return all equal parses */
+",EvaluateTreebank,0.5,evaluatetreebank; should; unavailable,,
+train:3218,unsupported_identifier,train,3218,fix,I13,Fix rendering issue with the door in GUI,"diff --git a/common/buildcraft/transport/render/GateItemRenderer.java b/common/buildcraft/transport/render/GateItemRenderer.java
+index 831bc441f..ebb7be4ed 100644
+--- a/common/buildcraft/transport/render/GateItemRenderer.java
++++ b/common/buildcraft/transport/render/GateItemRenderer.java
+@@ -10,18 +10,17 @@ package buildcraft.transport.render;
+ 
+ import buildcraft.api.gates.IGateExpansion;
+ import buildcraft.transport.gates.ItemGate;
+-import java.util.Random;
+-import net.minecraft.item.ItemStack;
++import net.minecraft.client.renderer.ItemRenderer;
++import net.minecraft.client.renderer.Tessellator;
+ import net.minecraft.client.renderer.entity.RenderItem;
+ import net.minecraft.client.renderer.entity.RenderManager;
+-import net.minecraft.client.renderer.Tessellator;
++import net.minecraft.entity.item.EntityItem;
++import net.minecraft.item.ItemStack;
+ import net.minecraft.util.IIcon;
+-import net.minecraft.client.renderer.ItemRenderer;
+ import net.minecraftforge.client.IItemRenderer;
+-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
+-import net.minecraftforge.client.IItemRenderer.ItemRendererHelper;
+ import org.lwjgl.opengl.GL11;
+-import net.minecraft.entity.item.EntityItem;
++
++import java.util.Random;
+ 
+ public class GateItemRenderer implements IItemRenderer {
+ 
+@@ -152,6 +151,7 @@ public class GateItemRenderer implements IItemRenderer {
+ 	private void render(ItemRenderType type, ItemStack stack) {
+ 		GL11.glPushMatrix();
+ 		GL11.glDisable(GL11.GL_LIGHTING);
++		GL11.glEnable(GL11.GL_ALPHA_TEST); // In certain cases gets disabled by this point
+ 		IIcon icon = ItemGate.getLogic(stack).getIconItem();
+ 		renderItem.renderIcon(0, 0, icon, 16, 16);
+ 
+",GUI,0.0,fix; rendering; issue; door; gui,,
+train:1563,unsupported_identifier,train,1563,feat,E2,Fix potential NPE in MenuItemImpl.toString(),"diff --git a/v7/appcompat/src/android/support/v7/internal/view/menu/MenuItemImpl.java b/v7/appcompat/src/android/support/v7/internal/view/menu/MenuItemImpl.java
+index ffddb31ce..ed2afc06b 100644
+--- a/v7/appcompat/src/android/support/v7/internal/view/menu/MenuItemImpl.java
++++ b/v7/appcompat/src/android/support/v7/internal/view/menu/MenuItemImpl.java
+@@ -538,7 +538,7 @@ public final class MenuItemImpl implements SupportMenuItem {
+ 
+     @Override
+     public String toString() {
+-        return mTitle.toString();
++        return mTitle != null ? mTitle.toString() : null;
+     }
+ 
+     void setMenuInfo(ContextMenuInfo menuInfo) {
+",NPE,0.4,fix; potential; npe,,
+train:3477,unsupported_identifier,train,3477,feat,E1,Add NPE check,"diff --git a/h2o-core/src/main/java/hex/Model.java b/h2o-core/src/main/java/hex/Model.java
+index b65a43339..7b80479c1 100644
+--- a/h2o-core/src/main/java/hex/Model.java
++++ b/h2o-core/src/main/java/hex/Model.java
+@@ -430,8 +430,9 @@ public abstract class Model<M extends Model<M,P,O>, P extends Model.Parameters,
+   public double score(double [] data){ return ArrayUtils.maxIndex(score0(data, new float[_output.nclasses()]));  }
+ 
+   @Override protected Futures remove_impl( Futures fs ) {
+-    for( Key k : _output._model_metrics )
+-      k.remove(fs);
++    if (_output._model_metrics != null)
++      for( Key k : _output._model_metrics )
++        k.remove(fs);
+     return fs;
+   }
+ 
+",NPE,0.0,add; npe; check,,
+train:2087,unsupported_identifier,train,2087,feat,E2,Fix the issue of NPE caused by assigning UnsupportedConstraint,"diff --git a/engine/src/blender/com/jme3/scene/plugins/blender/constraints/definitions/ConstraintDefinition.java b/engine/src/blender/com/jme3/scene/plugins/blender/constraints/definitions/ConstraintDefinition.java
+index a57bea7ec..7c51c8204 100644
+--- a/engine/src/blender/com/jme3/scene/plugins/blender/constraints/definitions/ConstraintDefinition.java
++++ b/engine/src/blender/com/jme3/scene/plugins/blender/constraints/definitions/ConstraintDefinition.java
+@@ -48,7 +48,7 @@ public abstract class ConstraintDefinition {
+             }
+         }
+         this.blenderContext = blenderContext;
+-        constraintHelper = blenderContext.getHelper(ConstraintHelper.class);
++        constraintHelper = (ConstraintHelper) (blenderContext == null ? null : blenderContext.getHelper(ConstraintHelper.class));
+         this.ownerOMA = ownerOMA;
+     }
+ 
+",NPE; UnsupportedConstraint,0.0,fix; issue; npe; caused; assigning; unsupportedconstraint,,
+train:66,unsupported_identifier,train,66,fix,I9,Significantly improved input/output of TIFF images,"diff --git a/android/core/src/processing/core/PImage.java b/android/core/src/processing/core/PImage.java
+index b6a1b01..fe22d36 100644
+--- a/android/core/src/processing/core/PImage.java
++++ b/android/core/src/processing/core/PImage.java
+@@ -2646,7 +2646,8 @@ public class PImage implements PConstants, Cloneable {
+     loadPixels();
+ 
+     try {
+-      OutputStream output = parent.createOutput(path);
++      OutputStream output = 
++        new BufferedOutputStream(parent.createOutput(path), 16 * 1024);
+ 
+       String lower = path.toLowerCase();
+       String extension = lower.substring(lower.lastIndexOf('.') + 1);
+",TIFF,0.1667,significantly; improved; input; tiff; images,,
+train:1158,unsupported_identifier,train,1158,refactor,R10,Remove merge of info and ping APIs,"diff --git a/src/test/java/org/elasticsearch/test/rest/spec/RestSpec.java b/src/test/java/org/elasticsearch/test/rest/spec/RestSpec.java
+index 9b5d69c..b72df81 100644
+--- a/src/test/java/org/elasticsearch/test/rest/spec/RestSpec.java
++++ b/src/test/java/org/elasticsearch/test/rest/spec/RestSpec.java
+@@ -40,12 +40,7 @@ public class RestSpec {
+     }
+ 
+     void addApi(RestApi restApi) {
+-        if (""info"".equals(restApi.getName())) {
+-            //TODO info and ping should really be two different api in the rest spec
+-            //info (GET|HEAD /) needs to be manually split into 1) info: GET /  2) ping: HEAD /
+-            restApiMap.put(""info"", new RestApi(restApi, ""info"", ""GET""));
+-            restApiMap.put(""ping"", new RestApi(restApi, ""ping"", ""HEAD""));
+-        } else if (""get"".equals(restApi.getName())) {
++        if (""get"".equals(restApi.getName())) {
+             //TODO get_source endpoint shouldn't be present in the rest spec for the get api
+             //as get_source is already a separate api
+             List<String> paths = Lists.newArrayList();
+",APIs,0.4,remove; merge; apis,,
+test:258,unsupported_identifier,test,258,style,S3,Deleted getClass method. Deleted unnecessary line breaks and indentation,"diff --git a/src/main/java/com/github/pedrovgs/binarytree/BinaryNode.java b/src/main/java/com/github/pedrovgs/binarytree/BinaryNode.java
+index 223a9a7..0db25d2 100644
+--- a/src/main/java/com/github/pedrovgs/binarytree/BinaryNode.java
++++ b/src/main/java/com/github/pedrovgs/binarytree/BinaryNode.java
+@@ -83,8 +83,6 @@ public class BinaryNode<T> {
+   }
+ 
+   @Override public String toString() {
+-    return ""BinaryNode{"" +
+-        ""data="" + data +
+-        '}';
++    return ""BinaryNode{"" + ""data="" + data + '}';
+   }
+ }
+",getClass,0.0,deleted; getclass; method; unnecessary; line; breaks; indentation,,
+train:2669,unsupported_identifier,train,2669,fix,I3,"Fixed NPE, most libraries have no types","diff --git a/platform/lang-impl/src/com/intellij/openapi/roots/libraries/scripting/ScriptingIndexableSetContributor.java b/platform/lang-impl/src/com/intellij/openapi/roots/libraries/scripting/ScriptingIndexableSetContributor.java
+index 1e7ac38..eb87513 100644
+--- a/platform/lang-impl/src/com/intellij/openapi/roots/libraries/scripting/ScriptingIndexableSetContributor.java
++++ b/platform/lang-impl/src/com/intellij/openapi/roots/libraries/scripting/ScriptingIndexableSetContributor.java
+@@ -50,7 +50,7 @@ public abstract class ScriptingIndexableSetContributor extends IndexableSetContr
+       LibraryTable libTable = ScriptingLibraryManager.getLibraryTable(project, ScriptingLibraryManager.LibraryLevel.GLOBAL);
+       if (libTable != null) {
+         for (Library lib : libTable.getLibraries()) {
+-          if (lib instanceof LibraryEx && ((LibraryEx)lib).getType().equals(libType)) {
++          if (lib instanceof LibraryEx && libType.equals(((LibraryEx)lib).getType())) {
+             for (VirtualFile libFile : lib.getFiles(OrderRootType.SOURCES)) {
+               libFile.putUserData(getIndexKey(), """");
+               libFiles.add(libFile);
+",NPE,0.1429,fixed; npe; most; have; no; types,,
+train:4509,unsupported_identifier,train,4509,fix,I13,FriendPickerFragment should display selection marks in single-choice mode,"diff --git a/facebook/src/com/facebook/GraphObjectListFragment.java b/facebook/src/com/facebook/GraphObjectListFragment.java
+index f215b91..d11eb7e 100644
+--- a/facebook/src/com/facebook/GraphObjectListFragment.java
++++ b/facebook/src/com/facebook/GraphObjectListFragment.java
+@@ -776,8 +776,8 @@ abstract class GraphObjectListFragment<T extends GraphObject> extends Fragment
+         @Override
+         void updateCheckboxState(CheckBox checkBox, boolean graphObjectSelected) {
+             checkBox.setChecked(graphObjectSelected);
+-            checkBox.setVisibility(selectionStrategy.shouldShowCheckBoxIfUnselected() ?
+-                    View.VISIBLE : View.GONE);
++            int visible = (graphObjectSelected || selectionStrategy.shouldShowCheckBoxIfUnselected()) ? View.VISIBLE : View.GONE;
++            checkBox.setVisibility(visible);
+         }
+     }
+ }
+",FriendPickerFragment,0.0,friendpickerfragment; should; display; selection; marks; single; choice; mode,,
+train:1093,unsupported_identifier,train,1093,fix,Ix,Fix potential NPE,"diff --git a/library/src/main/java/com/h6ah4i/android/widget/advrecyclerview/event/BaseRecyclerViewEventDistributor.java b/library/src/main/java/com/h6ah4i/android/widget/advrecyclerview/event/BaseRecyclerViewEventDistributor.java
+index c0fec2a..e256b5d 100644
+--- a/library/src/main/java/com/h6ah4i/android/widget/advrecyclerview/event/BaseRecyclerViewEventDistributor.java
++++ b/library/src/main/java/com/h6ah4i/android/widget/advrecyclerview/event/BaseRecyclerViewEventDistributor.java
+@@ -210,7 +210,7 @@ public abstract class BaseRecyclerViewEventDistributor<T> {
+         if (mListeners != null) {
+             return mListeners.size();
+         } else {
+-            return mListeners.size();
++            return 0;
+         }
+     }
+ 
+",NPE,0.0,fix; potential; npe,,
+test:175,unsupported_identifier,test,175,cicd,Cx,Adding testing to the CICD pipeline build process,"diff --git a/Makefile b/Makefile
+index 826e814..766f8f0 100644
+--- a/Makefile
++++ b/Makefile
+@@ -48,9 +48,12 @@ test:
+ unit-test:
+    @echo ""Running unit tests""
+  
+-build:
++build: test
+    @echo ""Building the project""
+ 
+-build-all: clean build
++test-all: unit-test integration-test
++
++build-all: clean test-all build
+    @echo ""Built all components""
+ 
++.PHONY: clean test build test-all build-all",CICD,0.1667,adding; testing; cicd; pipeline; process,,
+train:2641,unsupported_identifier,train,2641,fix,Ix,Improved compatibility of message ID in MUC component,"diff --git a/src/main/java/eu/siacs/conversations/parser/MessageParser.java b/src/main/java/eu/siacs/conversations/parser/MessageParser.java
+index 898613e3..fe42a2ae 100644
+--- a/src/main/java/eu/siacs/conversations/parser/MessageParser.java
++++ b/src/main/java/eu/siacs/conversations/parser/MessageParser.java
+@@ -269,9 +269,10 @@ public class MessageParser extends AbstractParser implements
+ 					status = Message.STATUS_SEND;
+ 					if (mXmppConnectionService.markMessage(conversation, remoteMsgId, Message.STATUS_SEND_RECEIVED)) {
+ 						return;
+-					} else if (remoteMsgId == null) {
+-						Message message = conversation.findSentMessageWithBody(packet.getBody());
++					} else {
++						Message message = conversation.findSentMessageWithBody(body);
+ 						if (message != null) {
++							message.setRemoteMsgId(remoteMsgId);
+ 							mXmppConnectionService.markMessage(message, Message.STATUS_SEND_RECEIVED);
+ 							return;
+ 						}
+",MUC,0.1667,improved; compatibility; id; muc; component,,
+test:334,unsupported_identifier,test,334,feat,E1,Fixed NullPointerException in the log,"diff --git a/src/com/owncloud/android/operations/OAuth2GetAccessToken.java b/src/com/owncloud/android/operations/OAuth2GetAccessToken.java
+index 66c4efee4..12e611c45 100644
+--- a/src/com/owncloud/android/operations/OAuth2GetAccessToken.java
++++ b/src/com/owncloud/android/operations/OAuth2GetAccessToken.java
+@@ -98,7 +98,7 @@ public class OAuth2GetAccessToken extends RemoteOperation {
+                 Log.e(TAG, ""OAuth2 TOKEN REQUEST with auth code "" + mOAuth2ParsedAuthorizationResponse.get(""code"") + "" to "" + client.getBaseUri() + "": "" + result.getLogMessage(), result.getException());
+                 
+             } else if (result.getCode() == ResultCode.OAUTH2_ERROR) {
+-                    Log.e(TAG, ""OAuth2 TOKEN REQUEST with auth code "" + mOAuth2ParsedAuthorizationResponse.get(""code"") + "" to "" + client.getBaseUri() + "": "" + mResultTokenMap.get(OAuth2Context.OAUTH2_TOKEN_RECEIVED_ERROR));
++                    Log.e(TAG, ""OAuth2 TOKEN REQUEST with auth code "" + mOAuth2ParsedAuthorizationResponse.get(""code"") + "" to "" + client.getBaseUri() + "": "" + ((mResultTokenMap != null) ? mResultTokenMap.get(OAuth2Context.OAUTH2_TOKEN_RECEIVED_ERROR) : ""NULL""));
+                     
+             } else {
+                 Log.e(TAG, ""OAuth2 TOKEN REQUEST with auth code "" + mOAuth2ParsedAuthorizationResponse.get(""code"") + "" to "" + client.getBaseUri() + "": "" + result.getLogMessage());
+",NullPointerException,0.3333,fixed; nullpointerexception,,
+test:219,unsupported_identifier,test,219,refactor,R3,Set the field to final to eliminate PMD warning,"diff --git a/src/org/opensolaris/opengrok/analysis/vb/VBAnalyzer.java b/src/org/opensolaris/opengrok/analysis/vb/VBAnalyzer.java
+index fc7b5be1..50b692d5 100644
+--- a/src/org/opensolaris/opengrok/analysis/vb/VBAnalyzer.java
++++ b/src/org/opensolaris/opengrok/analysis/vb/VBAnalyzer.java
+@@ -18,7 +18,7 @@
+  */
+ 
+ /*
+- * Copyright (c) 2006, 2010, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+  */
+ package org.opensolaris.opengrok.analysis.vb;
+ 
+@@ -42,9 +42,9 @@ import org.opensolaris.opengrok.history.Annotation;
+  */
+ public class VBAnalyzer extends PlainAnalyzer {
+ 
+-    private VBSymbolTokenizer cref;
+-    private VBXref xref;
+-    private Reader dummy = new StringReader("""");
++    private final VBSymbolTokenizer cref;
++    private final VBXref xref;
++    private final Reader dummy = new StringReader("""");
+ 
+     /** Creates a new instance of VBAnalyzer */
+     protected VBAnalyzer(FileAnalyzerFactory factory) {
+",PMD,0.1667,set; field; eliminate; pmd; warning,,
+train:2916,unsupported_identifier,train,2916,feat,E2,Fix unexpected NPE in SpannableStringBuilder,"diff --git a/core/java/android/text/SpannableStringBuilder.java b/core/java/android/text/SpannableStringBuilder.java
+index 992dc4d..40315ad 100644
+--- a/core/java/android/text/SpannableStringBuilder.java
++++ b/core/java/android/text/SpannableStringBuilder.java
+@@ -16,6 +16,7 @@
+ 
+ package android.text;
+ 
++import android.annotation.Nullable;
+ import android.graphics.Canvas;
+ import android.graphics.Paint;
+ import android.util.Log;
+@@ -814,8 +815,9 @@ public class SpannableStringBuilder implements CharSequence, GetChars, Spannable
+      * a list of all the spans regardless of type.
+      */
+     @SuppressWarnings(""unchecked"")
+-    public <T> T[] getSpans(int queryStart, int queryEnd, Class<T> kind) {
+-        if (kind == null || mSpanCount == 0) return ArrayUtils.emptyArray(kind);
++    public <T> T[] getSpans(int queryStart, int queryEnd, @Nullable Class<T> kind) {
++        if (kind == null) return (T[]) ArrayUtils.emptyArray(Object.class);
++        if (mSpanCount == 0) return ArrayUtils.emptyArray(kind);
+         int count = countSpans(queryStart, queryEnd, kind, treeRoot());
+         if (count == 0) {
+             return ArrayUtils.emptyArray(kind);
+",NPE,0.25,fix; unexpected; npe,,
+train:638,unsupported_identifier,train,638,feat,E1,Fixed NPE in crash log recording,"diff --git a/Application/LinkBubble/src/main/java/com/linkbubble/ui/ContentView.java b/Application/LinkBubble/src/main/java/com/linkbubble/ui/ContentView.java
+index 469ec13a..ef474726 100644
+--- a/Application/LinkBubble/src/main/java/com/linkbubble/ui/ContentView.java
++++ b/Application/LinkBubble/src/main/java/com/linkbubble/ui/ContentView.java
+@@ -546,11 +546,13 @@ public class ContentView extends FrameLayout {
+ 
+         @Override
+         public void onPageFinished(String urlAsString) {
+-            CrashTracking.log(""onPageFinished(), index:"" + MainController.get().getTabIndex(mOwnerTabView));
+             if (mLifeState != LifeState.Alive) {
+                 return;
+             }
+ 
++            Integer debugIndex = MainController.get() != null ? MainController.get().getTabIndex(mOwnerTabView) : null;
++            CrashTracking.log(""onPageFinished(), "" + (debugIndex != null ? ""index:"" + debugIndex : ""<MainController.get() == null>""));
++
+             // This should not be necessary, but unfortunately is.
+             // Often when pressing Back, onPageFinished() is mistakenly called when progress is 0. #245
+             if (mCurrentProgress != 100) {
+",NPE,0.2,fixed; npe; crash; recording,,
+train:2750,unsupported_identifier,train,2750,fix,I3,Fix NPE in SuggestionsAdapter when cursor is empty,"diff --git a/core/java/android/app/SuggestionsAdapter.java b/core/java/android/app/SuggestionsAdapter.java
+index 0bdb10b..49c94d1 100644
+--- a/core/java/android/app/SuggestionsAdapter.java
++++ b/core/java/android/app/SuggestionsAdapter.java
+@@ -147,7 +147,7 @@ class SuggestionsAdapter extends ResourceCursorAdapter {
+             final Cursor cursor = mSearchManager.getSuggestions(mSearchable, query);
+             // trigger fill window so the spinner stays up until the results are copied over and
+             // closer to being ready
+-            if (!mGlobalSearchMode) cursor.getCount();
++            if (!mGlobalSearchMode && cursor != null) cursor.getCount();
+             return cursor;
+         } catch (RuntimeException e) {
+             Log.w(LOG_TAG, ""Search suggestions query threw an exception."", e);
+",NPE,0.3333,fix; npe; when; empty,,
+train:2702,unsupported_identifier,train,2702,feat,E1,Fixed NPE caused by null scalar function parameter,"diff --git a/presto-main/src/main/java/com/facebook/presto/metadata/FunctionRegistry.java b/presto-main/src/main/java/com/facebook/presto/metadata/FunctionRegistry.java
+index a6b539f..da144e5 100644
+--- a/presto-main/src/main/java/com/facebook/presto/metadata/FunctionRegistry.java
++++ b/presto-main/src/main/java/com/facebook/presto/metadata/FunctionRegistry.java
+@@ -67,7 +67,8 @@ public class FunctionRegistry
+             }
+         }
+ 
+-        throw new IllegalArgumentException(format(""Function %s(%s) not registered"", name, Joiner.on("", "").join(parameterTypes)));
++        String parameters = Joiner.on("", "").useForNull(""NULL"").join(parameterTypes);
++        throw new IllegalArgumentException(format(""Function %s(%s) not registered"", name, parameters));
+     }
+ 
+     public FunctionInfo get(FunctionHandle handle)
+",NPE,0.2857,fixed; npe; caused; scalar; parameter,,
+train:1938,unsupported_identifier,train,1938,fix,I2,Fix Slovenia's ISO country code,"diff --git a/telephony/java/com/android/internal/telephony/MccTable.java b/telephony/java/com/android/internal/telephony/MccTable.java
+index c0bf7ec..fde1b59 100644
+--- a/telephony/java/com/android/internal/telephony/MccTable.java
++++ b/telephony/java/com/android/internal/telephony/MccTable.java
+@@ -322,7 +322,7 @@ public final class MccTable
+                 table.add(new MccEntry(289,""ge"",2));    //Abkhazia (Georgia)
+ 		table.add(new MccEntry(290,""gl"",2));	//Greenland (Denmark)
+ 		table.add(new MccEntry(292,""sm"",2));	//San Marino (Republic of)
+-		table.add(new MccEntry(293,""sl"",2));	//Slovenia (Republic of)
++		table.add(new MccEntry(293,""si"",2));	//Slovenia (Republic of)
+                 table.add(new MccEntry(294,""mk"",2));   //The Former Yugoslav Republic of Macedonia
+ 		table.add(new MccEntry(295,""li"",2));	//Liechtenstein (Principality of)
+                 table.add(new MccEntry(297,""me"",2));    //Montenegro (Republic of)
+",ISO,0.2,fix; iso; country; code,,
+train:275,unsupported_identifier,train,275,fix,I2,The properties returned from QueryTable.qualifyField should not have aliases,"diff --git a/squidb/src/com/yahoo/squidb/sql/SqlTable.java b/squidb/src/com/yahoo/squidb/sql/SqlTable.java
+index 0774d3c..66801c4 100644
+--- a/squidb/src/com/yahoo/squidb/sql/SqlTable.java
++++ b/squidb/src/com/yahoo/squidb/sql/SqlTable.java
+@@ -97,7 +97,7 @@ public abstract class SqlTable<T extends AbstractModel> extends DBObject<SqlTabl
+     @SuppressWarnings(""unchecked"")
+     public <F extends Field<?>> F qualifyField(F field) {
+         if (field instanceof Property<?>) {
+-            return (F) ((Property<?>) field).asSelectionFromTable(this, field.getName());
++            return (F) ((Property<?>) field).asSelectionFromTable(this, null);
+         } else {
+             return (F) Field.field(field.getName(), getName());
+         }
+",QueryTable,0.125,properties; returned; querytable; should; not; have; aliases,,
+train:3642,unsupported_identifier,train,3642,docs,D2,Added a link to ChannelEvent in the Channel JavaDoc,"diff --git a/src/main/java/org/jboss/netty/channel/Channel.java b/src/main/java/org/jboss/netty/channel/Channel.java
+index 76f27c3..2619ab9 100644
+--- a/src/main/java/org/jboss/netty/channel/Channel.java
++++ b/src/main/java/org/jboss/netty/channel/Channel.java
+@@ -36,7 +36,7 @@ import java.util.UUID;
+  * <li>the current state of the channel (e.g. is it open? is it connected?),</li>
+  * <li>the {@linkplain ChannelConfig configuration parameters} of the channel (e.g. receive buffer size),</li>
+  * <li>the I/O operations that the channel supports (e.g. read, write, connect, and bind), and</li>
+- * <li>the {@link ChannelPipeline} which handles all I/O events and requests
++ * <li>the {@link ChannelPipeline} which handles all {@link ChannelEvent I/O events and requests}
+  *     associated with the channel.</li>
+  * </ul>
+  *
+",JavaDoc,0.6,added; javadoc,,
+train:748,unsupported_identifier,train,748,test,T1,Delete unnecessary asEnum in NN testing,"diff --git a/src/test/java/hex/NeuralNetIrisTest.java b/src/test/java/hex/NeuralNetIrisTest.java
+index feae3432b..ae86c44f9 100644
+--- a/src/test/java/hex/NeuralNetIrisTest.java
++++ b/src/test/java/hex/NeuralNetIrisTest.java
+@@ -57,7 +57,6 @@ public class NeuralNetIrisTest extends TestUtil {
+     int epochs = 1000;
+     Vec[] data = Utils.remove(_train.vecs(), _train.vecs().length - 1);
+     Vec labels = _train.vecs()[_train.vecs().length - 1];
+-    labels.asEnum();
+     VecsInput input = new VecsInput(data, null);
+     Layer[] ls = new Layer[3];
+     ls[0] = input;
+",NN,0.2,delete; unnecessary; nn; testing,,
+train:2891,unsupported_identifier,train,2891,feat,E2,Preserve HUN with active remote input,"diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/policy/HeadsUpManager.java b/packages/SystemUI/src/com/android/systemui/statusbar/policy/HeadsUpManager.java
+index ab81712..d10a61c 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/policy/HeadsUpManager.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/policy/HeadsUpManager.java
+@@ -669,6 +669,13 @@ public class HeadsUpManager implements ViewTreeObserver.OnComputeInternalInsetsL
+             } else if (!selfFullscreen && otherFullscreen) {
+                 return 1;
+             }
++
++            if (remoteInputActive && !o.remoteInputActive) {
++                return -1;
++            } else if (!remoteInputActive && o.remoteInputActive) {
++                return 1;
++            }
++
+             return postTime < o.postTime ? 1
+                     : postTime == o.postTime ? entry.key.compareTo(o.entry.key)
+                             : -1;
+",HUN,0.0,preserve; hun; active; remote; input,,
+train:255,unsupported_identifier,train,255,refactor,R3,Change getTable query to case-insensitive,"diff --git a/liquibase-core/src/main/java/liquibase/sqlgenerator/core/FindForeignKeyConstraintsGeneratorPostgres.java b/liquibase-core/src/main/java/liquibase/sqlgenerator/core/FindForeignKeyConstraintsGeneratorPostgres.java
+index c3bf67efe..2e4c360d3 100644
+--- a/liquibase-core/src/main/java/liquibase/sqlgenerator/core/FindForeignKeyConstraintsGeneratorPostgres.java
++++ b/liquibase-core/src/main/java/liquibase/sqlgenerator/core/FindForeignKeyConstraintsGeneratorPostgres.java
+@@ -45,7 +45,7 @@ public class FindForeignKeyConstraintsGeneratorPostgres extends AbstractSqlGener
+             sb.append(""  INNER JOIN      INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME "");
+             sb.append(""  WHERE       i1.CONSTRAINT_TYPE = 'PRIMARY KEY' "");
+             sb.append("") PT ON PT.TABLE_NAME = PK.TABLE_NAME "");
+-            sb.append(""WHERE      FK.TABLE_NAME='"").append(statement.getBaseTableName()).append(""'"");
++            sb.append(""WHERE      lower(FK.TABLE_NAME)='"").append(statement.getBaseTableName().toLowerCase()).append(""'"");
+ 
+         return new Sql[] {
+                 new UnparsedSql(sb.toString())
+",getTable,0.0,change; gettable; query; case; insensitive,,
+test:482,unsupported_identifier,test,482,test,T1,Fix case sensitivity issue with table column names for PostgreSQL version,"diff --git a/modules/activiti-engine/src/test/java/org/activiti/examples/mgmt/TablePageQueryTest.java b/modules/activiti-engine/src/test/java/org/activiti/examples/mgmt/TablePageQueryTest.java
+index 9696f2d6a..c2d298022 100644
+--- a/modules/activiti-engine/src/test/java/org/activiti/examples/mgmt/TablePageQueryTest.java
++++ b/modules/activiti-engine/src/test/java/org/activiti/examples/mgmt/TablePageQueryTest.java
+@@ -74,8 +74,15 @@ public class TablePageQueryTest extends PluggableActivitiTestCase {
+   
+   private void verifyTaskNames(String[] expectedTaskNames, List<Map<String, Object>> rowData) {
+     assertEquals(expectedTaskNames.length, rowData.size());
++    String columnKey = ""NAME_"";
++
++    // mybatis will return the correct case for postgres table columns from version 3.0.6 on
++    if (processEngineConfiguration.getDatabaseType().equals(""postgres"")) {
++      columnKey = ""name_"";
++    }
++    
+     for (int i=0; i < expectedTaskNames.length; i++) {
+-      assertEquals(expectedTaskNames[i], rowData.get(i).get(""NAME_""));
++      assertEquals(expectedTaskNames[i], rowData.get(i).get(columnKey));
+     }
+   }
+   
+",PostgreSQL,0.3333,fix; sensitivity; issue; column; names; postgresql,,
+train:1011,unsupported_identifier,train,1011,fix,I10,Change the core registry to use ConcurrentMaps for thread safety,"diff --git a/src/main/java/org/terasology/engine/CoreRegistry.java b/src/main/java/org/terasology/engine/CoreRegistry.java
+index 0b5118e13..057b6e455 100644
+--- a/src/main/java/org/terasology/engine/CoreRegistry.java
++++ b/src/main/java/org/terasology/engine/CoreRegistry.java
+@@ -28,8 +28,8 @@ import java.util.Set;
+  * @author Immortius <immortius@gmail.com>
+  */
+ public class CoreRegistry {
+-    private static Map<Class<? extends Object>, Object> store = Maps.newHashMap();
+-    private static Set<Class<? extends Object>> permStore = Sets.newHashSet();
++    private static Map<Class<? extends Object>, Object> store = Maps.newConcurrentMap();
++    private static Set<Class<? extends Object>> permStore = Sets.newSetFromMap(Maps.<Class<? extends Object>, Boolean>newConcurrentMap());
+ 
+     /**
+      * Registers a core system
+",ConcurrentMaps,0.1429,change; registry; use; concurrentmaps; thread; safety,,
+train:3200,unsupported_identifier,train,3200,docs,D2,Add JavaDoc comments,"diff --git a/byte-buddy-dep/src/main/java/net/bytebuddy/asm/Advice.java b/byte-buddy-dep/src/main/java/net/bytebuddy/asm/Advice.java
+index 8a90e31b07..0bc5228929 100644
+--- a/byte-buddy-dep/src/main/java/net/bytebuddy/asm/Advice.java
++++ b/byte-buddy-dep/src/main/java/net/bytebuddy/asm/Advice.java
+@@ -70,6 +70,26 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
+  * computed by ASM by using the {@link ClassWriter#COMPUTE_FRAMES} option. If the advice methods do not contain any branching instructions, this is
+  * not required. No action is required if the advice methods are at least compiled with Java 6 but are used on classes older than Java 6.
+  * </p>
++ * <p>
++ * <b>Note</b>: It is not possible to trigger break points in advice methods as the debugging information of the inlined advice is not preserved.
++ * It is not possible in Java to reference more than one source file per class what makes translating such debugging information impossible. It
++ * is however possible to set break points in advice methods when invoking the original advice target. This allows debugging of advice code within
++ * unit tests that invoke the advice method without instrumentation.
++ * </p>
++ *
++ * @see Argument
++ * @see BoxedArguments
++ * @see BoxedReturn
++ * @see DynamicValue
++ * @see Enter
++ * @see FieldValue
++ * @see Ignored
++ * @see OnMethodEnter
++ * @see OnMethodExit
++ * @see Origin
++ * @see Return
++ * @see This
++ * @see Thrown
+  */
+ public class Advice implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
+ 
+",JavaDoc,0.0,add; javadoc; comments,,
+test:4,low_lexical_coverage,test,4,refactor,Rx,Change method name,"diff --git a/robotium-solo/src/main/java/com/jayway/android/robotium/solo/Solo.java b/robotium-solo/src/main/java/com/jayway/android/robotium/solo/Solo.java
+index 76e1f20..0246494 100644
+--- a/robotium-solo/src/main/java/com/jayway/android/robotium/solo/Solo.java
++++ b/robotium-solo/src/main/java/com/jayway/android/robotium/solo/Solo.java
+@@ -2369,7 +2369,7 @@ public class Solo {
+      * 
+      */
+ 
+-    public boolean waitForActivityStackToBeEmpty(int timeout)
++    public boolean waitForEmptyActivityStack(int timeout)
+     {
+     	return waiter.waitForCondition(
+     			new Condition(){
+",,0.0,change; method; name,,
+test:8,low_lexical_coverage,test,8,feat,E2,Fix the array writing in the comments,"diff --git a/dex-writer/src/main/java/com/googlecode/d2j/dex/writer/AnnotationWriter.java b/dex-writer/src/main/java/com/googlecode/d2j/dex/writer/AnnotationWriter.java
+index 9ea4399..1d4f100 100644
+--- a/dex-writer/src/main/java/com/googlecode/d2j/dex/writer/AnnotationWriter.java
++++ b/dex-writer/src/main/java/com/googlecode/d2j/dex/writer/AnnotationWriter.java
+@@ -44,8 +44,18 @@ import java.util.List;
+ 
+     // int,int long
+     public void visit(String name, Object value) {
+-        AnnotationElement ae = newAnnotationElement(name);
+-        ae.value = EncodedValue.wrap(cp.wrapEncodedItem(value));
++        if (value instanceof Object[]) {
++            DexAnnotationVisitor s = visitArray(name);
++            if (s != null) {
++                for (Object v : (Object[]) value) {
++                    s.visit(null, v);
++                }
++                s.visitEnd();
++            }
++        } else {
++            AnnotationElement ae = newAnnotationElement(name);
++            ae.value = EncodedValue.wrap(cp.wrapEncodedItem(value));
++        }
+     }
+ 
+     @Override
+",,0.0,fix; array; writing; comments,,
+test:17,low_lexical_coverage,test,17,fix,I7,Uninitialized parameters in the constructor initialization,"diff --git a/src/main/java/redis/clients/jedis/JedisSentinelPool.java b/src/main/java/redis/clients/jedis/JedisSentinelPool.java
+index 609c742..10db508 100644
+--- a/src/main/java/redis/clients/jedis/JedisSentinelPool.java
++++ b/src/main/java/redis/clients/jedis/JedisSentinelPool.java
+@@ -53,6 +53,9 @@ public class JedisSentinelPool extends Pool<Jedis> {
+     public JedisSentinelPool(String masterName, Set<String> sentinels, final Config poolConfig, int timeout, final String password,
+                      final int database) {
+     	this.poolConfig = poolConfig;
++    	this.timeout = timeout;
++    	this.password = password;
++    	this.database = database;
+     	HostAndPort master = initSentinels(sentinels, masterName);
+         initPool(master);    	        
+     }
+",,0.0,uninitialized; parameters; constructor; initialization,,
+test:22,low_lexical_coverage,test,22,docs,D4,Fixed spelling errors in the comments,"diff --git a/src/main/groovy/lang/MetaMethod.java b/src/main/groovy/lang/MetaMethod.java
+index f11fb7964..fc82a6776 100644
+--- a/src/main/groovy/lang/MetaMethod.java
++++ b/src/main/groovy/lang/MetaMethod.java
+@@ -207,13 +207,13 @@ public abstract class MetaMethod extends ParameterTypes implements Cloneable {
+ 
+     public final RuntimeException processDoMethodInvokeException (Exception e, Object object, Object [] argumentArray) {
+         if (e instanceof IllegalArgumentException) {
+-            //TODO: test if this is ok with new MOP, should be changed!
++            //TODO: test if this is OK with new MOP, should be changed!
+             // we don't want the exception being unwrapped if it is a IllegalArgumentException
+             // but in the case it is for example a IllegalThreadStateException, we want the unwrapping
+             // from the runtime
+             //Note: the reason we want unwrapping sometimes and sometimes not is that the method
+-            // invokation tries to invoke the method with and then reacts with type transformation
+-            // if the invokation failed here. This is ok for IllegalArgumentException, but it is
++            // invocation tries to invoke the method with and then reacts with type transformation
++            // if the invocation failed here. This is OK for IllegalArgumentException, but it is
+             // possible that a Reflector will be used to execute the call and then an Exception from inside
+             // the method is not wrapped in a InvocationTargetException and we will end here.
+             boolean setReason = e.getClass() != IllegalArgumentException.class || this instanceof GeneratedMetaMethod;
+@@ -227,7 +227,7 @@ public abstract class MetaMethod extends ParameterTypes implements Cloneable {
+     }
+ 
+     // This method is not final but it should be overloaded very carefully and only by generated methods
+-    // there is no garantee that it will be called
++    // there is no guarantee that it will be called
+     public Object doMethodInvoke(Object object, Object[] argumentArray) {
+         argumentArray = coerceArgumentsToClasses(argumentArray);
+         try {
+",,0.0,fixed; spelling; errors; comments,,
+test:25,low_lexical_coverage,test,25,style,S2,Adjust indentation,"diff --git a/src/com/fsck/k9/activity/MessageList.java b/src/com/fsck/k9/activity/MessageList.java
+index d68a7e0..ffa6a0a 100644
+--- a/src/com/fsck/k9/activity/MessageList.java
++++ b/src/com/fsck/k9/activity/MessageList.java
+@@ -2378,7 +2378,7 @@ public class MessageList extends K9ListActivity implements
+     }
+ 
+     private void toggleAllSelected() {
+-	boolean newState = true;
++        boolean newState = true;
+ 
+         synchronized (mAdapter.messages) {
+             if (mSelectedCount > 0) {
+@@ -2939,9 +2939,9 @@ public class MessageList extends K9ListActivity implements
+ 	            break;
+ 	        }
+ 	        case R.id.same_sender: {
+-	            MessageList.actionHandle(MessageList.this, ""From "" + selection.get(0).sender,
+-				selection.get(0).senderAddress, false, null, null);
+-				mSelectedCount = 0;
++                MessageList.actionHandle(MessageList.this, ""From "" + selection.get(0).sender,
++                    selection.get(0).senderAddress, false, null, null);
++                mSelectedCount = 0;
+ 	            break;
+ 	        }
+ 			}
+",,0.0,adjust; indentation,,
+test:29,low_lexical_coverage,test,29,test,T1,Remove unnecessary print statements,"diff --git a/enterprise/test/java/slavetest/AbstractHaTest.java b/enterprise/test/java/slavetest/AbstractHaTest.java
+index 2ef20b3..4f8ed27 100644
+--- a/enterprise/test/java/slavetest/AbstractHaTest.java
++++ b/enterprise/test/java/slavetest/AbstractHaTest.java
+@@ -188,7 +188,6 @@ public abstract class AbstractHaTest
+                 otherKeys.add( key );
+             }
+         }
+-        System.out.println( ""found indexing "" + otherKeys );
+         count = otherKeys.size();
+         
+         for ( String key : node.getPropertyKeys() )
+@@ -339,7 +338,6 @@ public abstract class AbstractHaTest
+         setExpectedResults( 3, 2, 2, 2, 0, 0 );
+         initializeDbs( 1 );
+         executeJob( new CommonJobs.CreateSomeEntitiesJob(), 0 );
+-        System.out.println( ""Test done"" );
+     }
+     
+     @Test
+",,0.0,remove; unnecessary; print; statements,,
+test:33,low_lexical_coverage,test,33,refactor,R10,Delete directory matching,"diff --git a/logging/src/main/java/org/jboss/as/logging/LoggingConfigurationProcessor.java b/logging/src/main/java/org/jboss/as/logging/LoggingConfigurationProcessor.java
+index 2626a3d463..51f7835630 100644
+--- a/logging/src/main/java/org/jboss/as/logging/LoggingConfigurationProcessor.java
++++ b/logging/src/main/java/org/jboss/as/logging/LoggingConfigurationProcessor.java
+@@ -153,9 +153,7 @@ public class LoggingConfigurationProcessor implements DeploymentUnitProcessor {
+      * Preference is for {@literal logging.properties} or {@literal jboss-logging.properties}.
+      *
+      * @param resourceRoot the resource to check.
+-     *
+      * @return the configuration file if found, otherwise {@code null}.
+-     *
+      * @throws DeploymentUnitProcessingException
+      *          if an error occurs.
+      */
+@@ -203,7 +201,7 @@ public class LoggingConfigurationProcessor implements DeploymentUnitProcessor {
+ 
+         @Override
+         public boolean accepts(final VirtualFile file) {
+-            return file.isDirectory() || configFiles.contains(file.getName());
++            return configFiles.contains(file.getName());
+         }
+     }
+ }
+",,0.0,delete; directory; matching,,
+test:44,low_lexical_coverage,test,44,feat,Ex,Translate the maximum walking distance to the walking parameters,"diff --git a/opentripplanner-routing/src/main/java/org/opentripplanner/routing/core/RoutingRequest.java b/opentripplanner-routing/src/main/java/org/opentripplanner/routing/core/RoutingRequest.java
+index edf5cbf1f..3b2639af9 100644
+--- a/opentripplanner-routing/src/main/java/org/opentripplanner/routing/core/RoutingRequest.java
++++ b/opentripplanner-routing/src/main/java/org/opentripplanner/routing/core/RoutingRequest.java
+@@ -795,4 +795,11 @@ public class RoutingRequest implements Cloneable, Serializable {
+     public String getBannedRouteStr() {
+         return getRouteSetStr(bannedRoutes);
+     }
++
++    public void setMaxWalkDistance(double maxWalkDistance) {
++        this.maxWalkDistance = maxWalkDistance;
++        if (walkingOptions != null && walkingOptions != this) {
++            this.walkingOptions.setMaxWalkDistance(maxWalkDistance);
++        }
++    }
+ }
+",,0.0,translate; maximum; walking; distance; parameters,,
+test:64,low_lexical_coverage,test,64,fix,I2,Reduce the boundary of the time boundary to prevent boundary errors,"diff --git a/client/src/main/java/com/metamx/druid/query/timeboundary/TimeBoundaryQuery.java b/client/src/main/java/com/metamx/druid/query/timeboundary/TimeBoundaryQuery.java
+index 541d534..82ec156 100644
+--- a/client/src/main/java/com/metamx/druid/query/timeboundary/TimeBoundaryQuery.java
++++ b/client/src/main/java/com/metamx/druid/query/timeboundary/TimeBoundaryQuery.java
+@@ -43,8 +43,8 @@ import java.util.Map;
+ public class TimeBoundaryQuery extends BaseQuery<Result<TimeBoundaryResultValue>>
+ {
+   public static final Interval MY_Y2K_INTERVAL = new Interval(
+-      new DateTime(Long.MIN_VALUE),
+-      new DateTime(Long.MAX_VALUE)
++      new DateTime(Integer.MIN_VALUE),
++      new DateTime(Integer.MAX_VALUE)
+   );
+   public static final String MAX_TIME = ""maxTime"";
+   public static final String MIN_TIME = ""minTime"";
+",,0.0,reduce; boundary; time; prevent; errors,,
+test:84,low_lexical_coverage,test,84,docs,D2,Remove unnecessary comments,"diff --git a/external/storm-hdfs/src/main/java/org/apache/storm/hdfs/common/security/HdfsSecurityUtil.java b/external/storm-hdfs/src/main/java/org/apache/storm/hdfs/common/security/HdfsSecurityUtil.java
+index d2f6273..f380b38 100644
+--- a/external/storm-hdfs/src/main/java/org/apache/storm/hdfs/common/security/HdfsSecurityUtil.java
++++ b/external/storm-hdfs/src/main/java/org/apache/storm/hdfs/common/security/HdfsSecurityUtil.java
+@@ -49,7 +49,6 @@ public class HdfsSecurityUtil {
+                  !(((List)conf.get(TOPOLOGY_AUTO_CREDENTIALS)).contains(AutoTGT.class.getName())))) {
+             if (UserGroupInformation.isSecurityEnabled()) {
+                 // compareAndSet added because of https://issues.apache.org/jira/browse/STORM-1535
+-                // need to test it first during ERIE release testing since the JIRA says ""might"" be and port it to apache.
+                 if (isLoggedIn.compareAndSet(false, true)) {
+                     LOG.info(""Logging in using keytab as AutoHDFS is not specified for "" + TOPOLOGY_AUTO_CREDENTIALS);
+                     String keytab = (String) conf.get(STORM_KEYTAB_FILE_KEY);
+",,0.0,remove; unnecessary; comments,,
+test:89,low_lexical_coverage,test,89,test,T1,Modified expected text,"diff --git a/components/camel-http/src/test/java/org/apache/camel/component/http/HttpGetTest.java b/components/camel-http/src/test/java/org/apache/camel/component/http/HttpGetTest.java
+index 43e4c2fa43..19dd78fcb6 100644
+--- a/components/camel-http/src/test/java/org/apache/camel/component/http/HttpGetTest.java
++++ b/components/camel-http/src/test/java/org/apache/camel/component/http/HttpGetTest.java
+@@ -29,7 +29,7 @@ import org.apache.camel.component.mock.MockEndpoint;
+  * @version $Revision$
+  */
+ public class HttpGetTest extends ContextTestSupport {
+-    protected String expectedText = ""<html"";
++    protected String expectedText = ""activemq"";
+ 
+     public void testHttpGet() throws Exception {
+         MockEndpoint mockEndpoint = resolveMandatoryEndpoint(""mock:results"", MockEndpoint.class);
+",,0.0,modified; expected; text,,
+test:92,low_lexical_coverage,test,92,style,S3,Remove blank lines,"diff --git a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultBuildSuccessResult.java b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultBuildSuccessResult.java
+index d0f4734..8ab8aca 100644
+--- a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultBuildSuccessResult.java
++++ b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultBuildSuccessResult.java
+@@ -21,5 +21,4 @@ public class DefaultBuildSuccessResult extends AbstractBuildResult implements In
+     public DefaultBuildSuccessResult(long startTime, long endTime) {
+         super(startTime, endTime, ""succeeded"");
+     }
+-
+ }
+diff --git a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTaskSuccessResult.java b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTaskSuccessResult.java
+index 2545e1b..8ffe007 100644
+--- a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTaskSuccessResult.java
++++ b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTaskSuccessResult.java
+@@ -19,9 +19,7 @@ package org.gradle.tooling.internal.provider.events;
+ import org.gradle.tooling.internal.protocol.events.InternalTaskSuccessResult;
+ 
+ public class DefaultTaskSuccessResult extends AbstractTaskResult implements InternalTaskSuccessResult {
+-
+     public DefaultTaskSuccessResult(long startTime, long endTime, String outcomeDescription) {
+         super(startTime, endTime, outcomeDescription);
+     }
+-
+ }
+diff --git a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSkippedResult.java b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSkippedResult.java
+index 1b4db01..5b99515 100644
+--- a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSkippedResult.java
++++ b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSkippedResult.java
+@@ -19,9 +19,7 @@ package org.gradle.tooling.internal.provider.events;
+ import org.gradle.tooling.internal.protocol.events.InternalTestSkippedResult;
+ 
+ public class DefaultTestSkippedResult extends AbstractTestResult implements InternalTestSkippedResult {
+-
+     public DefaultTestSkippedResult(long startTime, long endTime) {
+         super(startTime, endTime, ""skipped"");
+     }
+-
+ }
+diff --git a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSuccessResult.java b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSuccessResult.java
+index 0b48ec4..db657cb 100644
+--- a/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSuccessResult.java
++++ b/subprojects/launcher/src/main/java/org/gradle/tooling/internal/provider/events/DefaultTestSuccessResult.java
+@@ -19,9 +19,7 @@ package org.gradle.tooling.internal.provider.events;
+ import org.gradle.tooling.internal.protocol.events.InternalTestSuccessResult;
+ 
+ public class DefaultTestSuccessResult extends AbstractTestResult implements InternalTestSuccessResult {
+-
+     public DefaultTestSuccessResult(long startTime, long endTime) {
+         super(startTime, endTime, ""succeeded"");
+     }
+-
+ }
+",,0.0,remove; blank; lines,,
+test:104,low_lexical_coverage,test,104,refactor,R6,Add inventory check error log recording,"diff --git a/SeriesGuide/src/main/java/com/battlelancer/seriesguide/billing/IabHelper.java b/SeriesGuide/src/main/java/com/battlelancer/seriesguide/billing/IabHelper.java
+index ecd58071a..9c5ae9f56 100644
+--- a/SeriesGuide/src/main/java/com/battlelancer/seriesguide/billing/IabHelper.java
++++ b/SeriesGuide/src/main/java/com/battlelancer/seriesguide/billing/IabHelper.java
+@@ -632,6 +632,7 @@ public class IabHelper {
+                     inv = queryInventory(mService, mContext.getPackageName(),
+                             mSubscriptionsSupported, querySkuDetails, moreSkus);
+                 } catch (IabException e) {
++                    Timber.e(e, ""queryInventoryAsync: failed."");
+                     result = e.getResult();
+                 }
+ 
+",,0.0,add; inventory; check; error; log; recording,,
+test:119,low_lexical_coverage,test,119,feat,Ex,Implemented interruptible connection check,"diff --git a/plugins/github/src/org/jetbrains/plugins/github/tasks/GithubRepository.java b/plugins/github/src/org/jetbrains/plugins/github/tasks/GithubRepository.java
+index d92c4f4..c77b7cf 100644
+--- a/plugins/github/src/org/jetbrains/plugins/github/tasks/GithubRepository.java
++++ b/plugins/github/src/org/jetbrains/plugins/github/tasks/GithubRepository.java
+@@ -22,10 +22,7 @@ import org.jetbrains.plugins.github.api.GithubApiUtil;
+ import org.jetbrains.plugins.github.api.GithubConnection;
+ import org.jetbrains.plugins.github.api.GithubIssue;
+ import org.jetbrains.plugins.github.api.GithubIssueComment;
+-import org.jetbrains.plugins.github.exceptions.GithubAuthenticationException;
+-import org.jetbrains.plugins.github.exceptions.GithubJsonException;
+-import org.jetbrains.plugins.github.exceptions.GithubRateLimitExceededException;
+-import org.jetbrains.plugins.github.exceptions.GithubStatusCodeException;
++import org.jetbrains.plugins.github.exceptions.*;
+ import org.jetbrains.plugins.github.util.GithubAuthData;
+ import org.jetbrains.plugins.github.util.GithubUtil;
+ 
+@@ -68,14 +65,20 @@ public class GithubRepository extends BaseRepositoryImpl {
+   @Override
+   public CancellableConnection createCancellableConnection() {
+     return new CancellableConnection() {
++      private final GithubConnection myConnection = new GithubConnection(getAuthData(), false);
++
+       @Override
+       protected void doTest() throws Exception {
+-        getIssues("""", 10, false);
++        try {
++          GithubApiUtil.getIssuesQueried(myConnection, getRepoAuthor(), getRepoName(), """", false);
++        }
++        catch (GithubOperationCanceledException ignore) {
++        }
+       }
+ 
+       @Override
+       public void cancel() {
+-        // TODO
++        myConnection.abort();
+       }
+     };
+   }
+",,0.0,implemented; interruptible; connection; check,,
+test:122,low_lexical_coverage,test,122,test,T1,Converting time unit to milliseconds,"diff --git a/subprojects/internal-performance-testing/src/main/groovy/org/gradle/performance/fixture/TestScenarioSelector.java b/subprojects/internal-performance-testing/src/main/groovy/org/gradle/performance/fixture/TestScenarioSelector.java
+index 1fc2549..e67cf7f 100644
+--- a/subprojects/internal-performance-testing/src/main/groovy/org/gradle/performance/fixture/TestScenarioSelector.java
++++ b/subprojects/internal-performance-testing/src/main/groovy/org/gradle/performance/fixture/TestScenarioSelector.java
+@@ -79,7 +79,7 @@ public class TestScenarioSelector {
+             BigDecimal sum = BigDecimal.ZERO;
+             for (MeasuredOperationList operation : lastRun.getScenarios()) {
+                 for (Amount<Duration> duration : operation.getTotalTime()) {
+-                    sum = sum.add(duration.getValue());
++                    sum = sum.add(duration.toUnits(Duration.MILLI_SECONDS).getValue());
+                 }
+             }
+             return sum;
+",,0.0,converting; time; unit; milliseconds,,
+test:125,low_lexical_coverage,test,125,fix,I2,Corrected parameter usage in constructor method,"diff --git a/v7/appcompat/src/android/support/v7/widget/AppCompatTextView.java b/v7/appcompat/src/android/support/v7/widget/AppCompatTextView.java
+index 402d63fff..a05c4a877 100644
+--- a/v7/appcompat/src/android/support/v7/widget/AppCompatTextView.java
++++ b/v7/appcompat/src/android/support/v7/widget/AppCompatTextView.java
+@@ -37,7 +37,7 @@ public class AppCompatTextView extends TextView {
+     }
+ 
+     public AppCompatTextView(Context context, AttributeSet attrs) {
+-        this(context, attrs, 0);
++        this(context, attrs, android.R.attr.textViewStyle);
+     }
+ 
+     public AppCompatTextView(Context context, AttributeSet attrs, int defStyle) {
+",,0.0,corrected; parameter; usage; constructor; method,,
+test:126,low_lexical_coverage,test,126,docs,D2,Modify the text in the comments to make it clearer,"diff --git a/jetty-websocket/websocket-common/src/main/java/org/eclipse/jetty/websocket/common/io/WriteCallbackWrapper.java b/jetty-websocket/websocket-common/src/main/java/org/eclipse/jetty/websocket/common/io/WriteCallbackWrapper.java
+index 34b2bf19e2..e2cb9aa75f 100644
+--- a/jetty-websocket/websocket-common/src/main/java/org/eclipse/jetty/websocket/common/io/WriteCallbackWrapper.java
++++ b/jetty-websocket/websocket-common/src/main/java/org/eclipse/jetty/websocket/common/io/WriteCallbackWrapper.java
+@@ -22,7 +22,7 @@ import org.eclipse.jetty.util.Callback;
+ import org.eclipse.jetty.websocket.api.WriteCallback;
+ 
+ /**
+- * Wraps the exposed {@link WriteCallback} API with a Jetty {@link Callback}.
++ * Wraps the exposed {@link WriteCallback} WebSocket API with a Jetty {@link Callback}.
+  * <p>
+  * We don't expose the jetty {@link Callback} object to the webapp, as that makes things complicated for the WebAppContext's Classloader.
+  */
+",,0.0,modify; text; comments; make; clearer,,
+test:129,low_lexical_coverage,test,129,style,S2,Fix code formatting,"diff --git a/jphp-runtime/src/php/runtime/invoke/InvokeHelper.java b/jphp-runtime/src/php/runtime/invoke/InvokeHelper.java
+index a4a4ef68..11fc8c3c 100644
+--- a/jphp-runtime/src/php/runtime/invoke/InvokeHelper.java
++++ b/jphp-runtime/src/php/runtime/invoke/InvokeHelper.java
+@@ -70,7 +70,7 @@ final public class InvokeHelper {
+     public static Memory[] makeArguments(Environment env, Memory[] args,
+                                        ParameterEntity[] parameters,
+                                        String originClassName, String originMethodName,
+-                                       TraceInfo trace){
++                                       TraceInfo trace) {
+         return InvokeArgumentHelper.makeArguments(env, args, parameters, originClassName, originMethodName, trace);
+     }
+ 
+",,0.0,fix; code; formatting,,
+test:133,low_lexical_coverage,test,133,test,T1,Comment out failed tests,"diff --git a/test/net/java/sip/communicator/slick/protocol/icq/TestOperationSetPresence.java b/test/net/java/sip/communicator/slick/protocol/icq/TestOperationSetPresence.java
+index 48da78a96..1989f9ced 100644
+--- a/test/net/java/sip/communicator/slick/protocol/icq/TestOperationSetPresence.java
++++ b/test/net/java/sip/communicator/slick/protocol/icq/TestOperationSetPresence.java
+@@ -102,7 +102,7 @@ public class TestOperationSetPresence
+ 
+         // execute this test after postTestSubscribe
+         // to be sure that AuthorizationHandler is installed
+-        suite.addTest(new TestOperationSetPresence(""postTestReceiveAuthorizatinonRequest""));
++//        suite.addTest(new TestOperationSetPresence(""postTestReceiveAuthorizatinonRequest""));
+ 
+         return suite;
+     }
+",,0.0,comment; out; failed; tests,,
+test:136,low_lexical_coverage,test,136,fix,I2,Update status message with more detailed information,"diff --git a/plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/runtime/sql/SQLQueryParameterBindDialog.java b/plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/runtime/sql/SQLQueryParameterBindDialog.java
+index b70ed55c6..c52ccacb8 100644
+--- a/plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/runtime/sql/SQLQueryParameterBindDialog.java
++++ b/plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/runtime/sql/SQLQueryParameterBindDialog.java
+@@ -149,7 +149,7 @@ public class SQLQueryParameterBindDialog extends StatusDialog {
+             tableEditor.showEditor(paramTable.getItem(0), 2);
+         }
+ 
+-        updateStatus(GeneralUtils.makeInfoStatus(""Use Tab key to switch parameters""));
++        updateStatus(GeneralUtils.makeInfoStatus(""Use Tab to switch. String values must be quoted. You can use expressions in values""));
+         return composite;
+     }
+ 
+",,0.0,update; status; message; more; detailed; information,,
+test:138,low_lexical_coverage,test,138,refactor,R10,Delete unnecessary code,"diff --git a/src/persistence/org/codehaus/groovy/grails/orm/hibernate/metaclass/ValidatePersistentMethod.java b/src/persistence/org/codehaus/groovy/grails/orm/hibernate/metaclass/ValidatePersistentMethod.java
+index 4bba2e8020..4db6f58918 100644
+--- a/src/persistence/org/codehaus/groovy/grails/orm/hibernate/metaclass/ValidatePersistentMethod.java
++++ b/src/persistence/org/codehaus/groovy/grails/orm/hibernate/metaclass/ValidatePersistentMethod.java
+@@ -61,7 +61,6 @@ public class ValidatePersistentMethod extends AbstractDynamicPersistentMethod {
+ 			if(errors.hasErrors()) {
+ 				valid = new Boolean(!errors.hasErrors());	
+ 				DelegatingMetaClass metaClass = (DelegatingMetaClass)InvokerHelper.getInstance().getMetaRegistry().getMetaClass(target.getClass());
+-				metaClass.setProperty(target,DomainClassMethods.HAS_ERRORS_PROPERTY,valid);
+ 				metaClass.setProperty(target,DomainClassMethods.ERRORS_PROPERTY,errors);
+ 			}
+ 		}
+",,0.0,delete; unnecessary; code,,
+test:140,low_lexical_coverage,test,140,feat,Ex,Added execution logic for sent messages,"diff --git a/jetty-io/src/main/java/org/eclipse/jetty/io/nio/SelectChannelEndPoint.java b/jetty-io/src/main/java/org/eclipse/jetty/io/nio/SelectChannelEndPoint.java
+index ab5d9ff75c..d440a1ba4a 100644
+--- a/jetty-io/src/main/java/org/eclipse/jetty/io/nio/SelectChannelEndPoint.java
++++ b/jetty-io/src/main/java/org/eclipse/jetty/io/nio/SelectChannelEndPoint.java
+@@ -176,9 +176,12 @@ public class SelectChannelEndPoint extends ChannelEndPoint implements AsyncEndPo
+                 _writable = true; // Once writable is in ops, only removed with dispatch.
+             }
+ 
+-            // Dispatch if we are not already
+-            if (!_dispatched)
++            // If dispatched, then deregister interest
++            if (_dispatched)
++                _key.interestOps(0);
++            else
+             {
++                // other wise do the dispatch
+                 dispatch();
+                 if (_dispatched && !_selectSet.getManager().isDeferringInterestedOps0())
+                 {
+",,0.0,added; execution; logic; sent; messages,,
+test:144,low_lexical_coverage,test,144,docs,D2,Fix incorrect Javadoc,"diff --git a/twitter4j-core/src/main/java/twitter4j/api/UsersResources.java b/twitter4j-core/src/main/java/twitter4j/api/UsersResources.java
+index 3ba376e4..4dbadd9a 100644
+--- a/twitter4j-core/src/main/java/twitter4j/api/UsersResources.java
++++ b/twitter4j-core/src/main/java/twitter4j/api/UsersResources.java
+@@ -331,7 +331,7 @@ public interface UsersResources {
+      * Return up to 100 users worth of extended information, specified by either ID, screen name, or combination of the two. The author's most recent status (if the authenticating user has permission) will be returned inline.
+      * <br>This method calls https://api.twitter.com/1.1/users/lookup.json
+      *
+-     * @param ids Specifies the screen names of the users to return.
++     * @param ids Specifies the IDs of the users to return.
+      * @return users
+      * @throws TwitterException when Twitter service or network is unavailable
+      * @see <a href=""https://dev.twitter.com/docs/api/1.1/get/users/lookup"">GET users/lookup | Twitter Developers</a>
+",,0.0,fix; incorrect; javadoc,,
+test:148,low_lexical_coverage,test,148,test,T1,Remove unnecessary parameters,"diff --git a/vertx-testsuite/src/test/java/org/vertx/java/tests/core/net/JavaNetTest.java b/vertx-testsuite/src/test/java/org/vertx/java/tests/core/net/JavaNetTest.java
+index 5eeea03..90940ce 100644
+--- a/vertx-testsuite/src/test/java/org/vertx/java/tests/core/net/JavaNetTest.java
++++ b/vertx-testsuite/src/test/java/org/vertx/java/tests/core/net/JavaNetTest.java
+@@ -439,7 +439,7 @@ public class JavaNetTest extends TestBase {
+ 
+   @Test
+   public void testListenOnWildcardPort() throws Exception {
+-    startTest(getMethodName(), false);
++    startTest(getMethodName());
+   }
+ 
+   @Test
+",,0.0,remove; unnecessary; parameters,,
+test:150,low_lexical_coverage,test,150,refactor,R3,Fetch data from server without using cache,"diff --git a/java/org/apache/catalina/startup/ContextConfig.java b/java/org/apache/catalina/startup/ContextConfig.java
+index 06987b467..734e96adf 100644
+--- a/java/org/apache/catalina/startup/ContextConfig.java
++++ b/java/org/apache/catalina/startup/ContextConfig.java
+@@ -28,6 +28,7 @@ import java.net.JarURLConnection;
+ import java.net.MalformedURLException;
+ import java.net.URISyntaxException;
+ import java.net.URL;
++import java.net.URLConnection;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.HashMap;
+@@ -560,7 +561,9 @@ public class ContextConfig implements LifecycleListener {
+ 
+         try {
+             source = new InputSource(contextXml.toString());
+-            stream = contextXml.openStream();
++            URLConnection xmlConn = contextXml.openConnection();
++            xmlConn.setUseCaches(false);
++            stream = xmlConn.getInputStream();
+         } catch (Exception e) {
+             log.error(sm.getString(""contextConfig.contextMissing"",
+                       contextXml) , e);
+",,0.0,fetch; data; server; without; using; cache,,
+test:152,low_lexical_coverage,test,152,test,T1,"Disable hardware acceleration after this, it is necessary to manually disable it at some point during development, possibly for debugging purposes","diff --git a/graphics/java/android/graphics/drawable/Drawable.java b/graphics/java/android/graphics/drawable/Drawable.java
+index cfb1983..2ec4284 100644
+--- a/graphics/java/android/graphics/drawable/Drawable.java
++++ b/graphics/java/android/graphics/drawable/Drawable.java
+@@ -156,7 +156,7 @@ public abstract class Drawable {
+      * @param canvas The canvas to draw into
+      */
+     public void draw(Canvas canvas) {
+-        if (canvas != null && canvas.isHardwareAccelerated()) {
++        if (canvas != null && canvas.isHardwareAccelerated() && false) { // temporarily disabled
+             final HardwareCanvas hardwareCanvas = (HardwareCanvas) canvas;
+             final DisplayList displayList = getDisplayList(hardwareCanvas);
+             if (displayList != null) {
+",,0.0,disable; hardware; acceleration; after; necessary; manually; some; point; during; development; possibly; debugging; purposes,,
+test:153,low_lexical_coverage,test,153,refactor,R10,Remove unnecessary print statements in the constructor,"diff --git a/subprojects/launcher/src/main/java/org/gradle/launcher/daemon/server/stats/DaemonRunningStats.java b/subprojects/launcher/src/main/java/org/gradle/launcher/daemon/server/stats/DaemonRunningStats.java
+index 963f0c4..229cc9f 100644
+--- a/subprojects/launcher/src/main/java/org/gradle/launcher/daemon/server/stats/DaemonRunningStats.java
++++ b/subprojects/launcher/src/main/java/org/gradle/launcher/daemon/server/stats/DaemonRunningStats.java
+@@ -29,7 +29,6 @@ public class DaemonRunningStats {
+     private long allBuildsTime;
+ 
+     public DaemonRunningStats(TimeProvider timeProvider, long startAt) {
+-        System.out.println(""create"");
+         this.runningClock = new Clock(startAt);
+         this.timeProvider = timeProvider;
+     }
+",,0.0,remove; unnecessary; print; statements; constructor,,
+test:155,low_lexical_coverage,test,155,style,S3,Remove extra blank lines,"diff --git a/src/checkstyle/com/puppycrawl/tools/checkstyle/Checker.java b/src/checkstyle/com/puppycrawl/tools/checkstyle/Checker.java
+index f87b9731d..d44934cbc 100644
+--- a/src/checkstyle/com/puppycrawl/tools/checkstyle/Checker.java
++++ b/src/checkstyle/com/puppycrawl/tools/checkstyle/Checker.java
+@@ -18,7 +18,6 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ package com.puppycrawl.tools.checkstyle;
+ 
+-
+ import antlr.RecognitionException;
+ import antlr.TokenStreamException;
+ import java.io.File;
+",,0.0,remove; extra; blank; lines,,
+test:159,low_lexical_coverage,test,159,fix,I1,Modified dynamic injection to fixed injection,"diff --git a/AndroidAnnotations/androidannotations-core/androidannotations/src/main/java/org/androidannotations/internal/core/handler/AfterExtrasHandler.java b/AndroidAnnotations/androidannotations-core/androidannotations/src/main/java/org/androidannotations/internal/core/handler/AfterExtrasHandler.java
+index cba52de..10b3e68 100644
+--- a/AndroidAnnotations/androidannotations-core/androidannotations/src/main/java/org/androidannotations/internal/core/handler/AfterExtrasHandler.java
++++ b/AndroidAnnotations/androidannotations-core/androidannotations/src/main/java/org/androidannotations/internal/core/handler/AfterExtrasHandler.java
+@@ -48,7 +48,7 @@ public class AfterExtrasHandler extends BaseAnnotationHandler<EActivityHolder> {
+ 	@Override
+ 	public void process(Element element, EActivityHolder holder) {
+ 		String methodName = element.getSimpleName().toString();
+-		holder.getInjectExtrasBlock().invoke(methodName);
++		holder.getInjectExtrasMethod().body().invoke(methodName);
+ 
+ 		// ensure that onNewIntent is overridden
+ 		holder.getOnNewIntent();
+",,0.0,modified; dynamic; injection; fixed,,
+test:163,low_lexical_coverage,test,163,refactor,R8,Change variable declaration position,"diff --git a/core/server/src/main/java/alluxio/worker/netty/NettyDataServer.java b/core/server/src/main/java/alluxio/worker/netty/NettyDataServer.java
+index e1b67fc..d49e9b5 100644
+--- a/core/server/src/main/java/alluxio/worker/netty/NettyDataServer.java
++++ b/core/server/src/main/java/alluxio/worker/netty/NettyDataServer.java
+@@ -68,8 +68,6 @@ public final class NettyDataServer implements DataServer {
+ 
+   @Override
+   public void close() throws IOException {
+-    boolean completed;
+-
+     int quietPeriodSecs =
+         Configuration.getInt(PropertyKey.WORKER_NETWORK_NETTY_SHUTDOWN_QUIET_PERIOD);
+     int timeoutSecs = Configuration.getInt(PropertyKey.WORKER_NETWORK_NETTY_SHUTDOWN_TIMEOUT);
+@@ -84,6 +82,7 @@ public final class NettyDataServer implements DataServer {
+     // channel. If 2) or 3) times out, the respective EventLoopGroup failed to shut down
+     // gracefully and its shutdown is forced.
+ 
++    boolean completed;
+     completed =
+         mChannelFuture.channel().close().awaitUninterruptibly(timeoutSecs, TimeUnit.SECONDS);
+     if (!completed) {
+",,0.0,change; variable; declaration; position,,
+test:178,low_lexical_coverage,test,178,fix,I5,Avoid object allocation during drawing/layout operations (pre-allocate and reuse),"diff --git a/flowlayout-lib/src/main/java/com/zhy/view/flowlayout/FlowLayout.java b/flowlayout-lib/src/main/java/com/zhy/view/flowlayout/FlowLayout.java
+index f05f587..14b5c81 100755
+--- a/flowlayout-lib/src/main/java/com/zhy/view/flowlayout/FlowLayout.java
++++ b/flowlayout-lib/src/main/java/com/zhy/view/flowlayout/FlowLayout.java
+@@ -15,6 +15,7 @@ public class FlowLayout extends ViewGroup
+     protected List<List<View>> mAllViews = new ArrayList<List<View>>();
+     protected List<Integer> mLineHeight = new ArrayList<Integer>();
+     private String mGravity;
++    private List<View> lineViews = new ArrayList<>();
+ 
+     public FlowLayout(Context context, AttributeSet attrs, int defStyle)
+     {
+@@ -105,14 +106,13 @@ public class FlowLayout extends ViewGroup
+     {
+         mAllViews.clear();
+         mLineHeight.clear();
++        lineViews.clear();
+ 
+         int width = getWidth();
+ 
+         int lineWidth = 0;
+         int lineHeight = 0;
+ 
+-        List<View> lineViews = new ArrayList<View>();
+-
+         int cCount = getChildCount();
+ 
+         for (int i = 0; i < cCount; i++)
+",,0.0,avoid; object; allocation; during; drawing; layout; operations; pre; allocate; reuse,,
+test:180,low_lexical_coverage,test,180,test,T1,Deleted a waiting time statement,"diff --git a/components/camel-zookeeper/src/test/java/org/apache/camel/component/zookeeper/policy/ZookeeperElectionTest.java b/components/camel-zookeeper/src/test/java/org/apache/camel/component/zookeeper/policy/ZookeeperElectionTest.java
+index 8012820bc1..fb639b0818 100644
+--- a/components/camel-zookeeper/src/test/java/org/apache/camel/component/zookeeper/policy/ZookeeperElectionTest.java
++++ b/components/camel-zookeeper/src/test/java/org/apache/camel/component/zookeeper/policy/ZookeeperElectionTest.java
+@@ -75,7 +75,6 @@ public class ZookeeperElectionTest extends ZooKeeperTestSupport {
+         LOG.debug(""About to shutdown the first candidate."");
+ 
+         candidateOneContext.stop(); // the first candidate was killed.
+-
+         assertIsMaster(electionCandidate2);
+     }
+ 
+@@ -86,10 +85,9 @@ public class ZookeeperElectionTest extends ZooKeeperTestSupport {
+ 
+         ZooKeeperElection electionCandidate1 = createElectionCandidate(candidateOneContext, 2);
+         assertTrue(""The first candidate was not elected."", electionCandidate1.isMaster());
++        
+         ZooKeeperElection electionCandidate2 = createElectionCandidate(candidateTwoContext, 2);
+-        // Need to wait for a while to Candidate2 to be elected.
+-        Thread.sleep(3000);
+-        assertTrue(""The second candidate should also be a master."", electionCandidate2.isMaster());
++        assertIsMaster(electionCandidate2);
+     }
+ 
+     @Test
+",,0.0,deleted; waiting; time; statement,,
+test:186,low_lexical_coverage,test,186,refactor,R10,Remove unnecessary array copy,"diff --git a/src/com/google/javascript/jscomp/regex/CharRanges.java b/src/com/google/javascript/jscomp/regex/CharRanges.java
+index e759295..8f170ea 100644
+--- a/src/com/google/javascript/jscomp/regex/CharRanges.java
++++ b/src/com/google/javascript/jscomp/regex/CharRanges.java
+@@ -50,7 +50,7 @@ final class CharRanges {
+    * Returns an instance containing all and only the given members.
+    */
+   public static CharRanges withMembers(int... members) {
+-    return new CharRanges(intArrayToRanges(Arrays.copyOf(members, members.length)));
++    return new CharRanges(intArrayToRanges(members));
+   }
+ 
+   /**
+@@ -59,7 +59,6 @@ final class CharRanges {
+    *     non-contiguous, [inclusive start, exclusive end) ranges.
+    */
+   public static CharRanges withRanges(int... ranges) {
+-    ranges = Arrays.copyOf(ranges, ranges.length);
+     if ((ranges.length & 1) != 0) { throw new IllegalArgumentException(); }
+     for (int i = 1; i < ranges.length; ++i) {
+       if (ranges[i] <= ranges[i - 1]) {
+",,0.0,remove; unnecessary; array; copy,,
+test:196,low_lexical_coverage,test,196,docs,D2,Corrected comment content format,"diff --git a/app/src/main/java/com/SecUpwN/AIMSICD/adapters/DbeImportCardInflater.java b/app/src/main/java/com/SecUpwN/AIMSICD/adapters/DbeImportCardInflater.java
+index 545367b..c411dc0 100644
+--- a/app/src/main/java/com/SecUpwN/AIMSICD/adapters/DbeImportCardInflater.java
++++ b/app/src/main/java/com/SecUpwN/AIMSICD/adapters/DbeImportCardInflater.java
+@@ -17,7 +17,7 @@ import com.SecUpwN.AIMSICD.R;
+  *
+  *  Dependencies:
+  *                  dbe_import_items.xml
+- *                  
++ *
+  *
+  *  Issues:
+  *          [ ]     LAC and CID seem swapped...hard to debug
+",,0.0,corrected; comment; content; format,,
+test:197,low_lexical_coverage,test,197,refactor,R3,Change to use commented code,"diff --git a/h2o-core/src/main/java/water/Job.java b/h2o-core/src/main/java/water/Job.java
+index 14cd8ad0a..a54be25be 100644
+--- a/h2o-core/src/main/java/water/Job.java
++++ b/h2o-core/src/main/java/water/Job.java
+@@ -263,7 +263,7 @@ public final class Job<T extends Keyed> extends Keyed<Job> {
+   }
+ 
+   static public boolean isCancelledException(Throwable ex) {
+-    return false; // return ex instanceof JobCancelledException || ex.getCause() != null && ex.getCause() instanceof JobCancelledException;
++    return ex instanceof JobCancelledException || ex.getCause() != null && ex.getCause() instanceof JobCancelledException;
+   }
+ 
+   private static class Barrier1OnCom extends JAtomic {
+",,0.0,change; use; commented; code,,
+test:198,low_lexical_coverage,test,198,fix,I2,Fix a context menu,"diff --git a/OsmAnd/src/net/osmand/plus/activities/MapActivityActions.java b/OsmAnd/src/net/osmand/plus/activities/MapActivityActions.java
+index b9f311eb2c..405ea5e422 100644
+--- a/OsmAnd/src/net/osmand/plus/activities/MapActivityActions.java
++++ b/OsmAnd/src/net/osmand/plus/activities/MapActivityActions.java
+@@ -1067,7 +1067,7 @@ public class MapActivityActions implements DialogProvider {
+ 		final TargetPointsHelper targetPointsHelper = app.getTargetPointsHelper();
+ 		
+ 		
+-		Item dir = qa.item(R.string.get_directions).icons(
++		Item dir = qa.item(R.string.context_menu_item_directions_to).icons(
+ 				R.drawable.ic_action_gdirections_dark, R.drawable.ic_action_gdirections_light);
+ 		dir.listen(
+ 				new OnContextMenuClick() {
+",,0.0,fix; context; menu,,
+test:199,low_lexical_coverage,test,199,test,T1,Change the sorting method of query results,"diff --git a/sql/src/test/java/io/crate/integrationtests/SnapshotRestoreIntegrationTest.java b/sql/src/test/java/io/crate/integrationtests/SnapshotRestoreIntegrationTest.java
+index 54df529a3..215e84e0e 100644
+--- a/sql/src/test/java/io/crate/integrationtests/SnapshotRestoreIntegrationTest.java
++++ b/sql/src/test/java/io/crate/integrationtests/SnapshotRestoreIntegrationTest.java
+@@ -325,7 +325,7 @@ public class SnapshotRestoreIntegrationTest extends SQLTransportIntegrationTest
+         execute(""RESTORE SNAPSHOT "" + snapshotName() + "" TABLE my_table_1 with ("" +
+                 ""wait_for_completion=true)"");
+ 
+-        execute(""select schema_name || '.' || table_name from information_schema.tables where schema_name='doc'"");
++        execute(""select schema_name || '.' || table_name from information_schema.tables where schema_name='doc' order by 1"");
+         assertThat(TestingHelpers.printedTable(response.rows()), is(""doc.my_table_1\ndoc.my_table_2\n""));
+     }
+ 
+",,0.0,change; sorting; method; query; results,,
+test:203,low_lexical_coverage,test,203,fix,I3,"The user is not allowed to choose the prompt, not even the first character","diff --git a/EditTextChips/src/main/java/com/novoda/demo/edittextchips/SplitwiseTagsView.java b/EditTextChips/src/main/java/com/novoda/demo/edittextchips/SplitwiseTagsView.java
+index 292e8c8..ec3756f 100644
+--- a/EditTextChips/src/main/java/com/novoda/demo/edittextchips/SplitwiseTagsView.java
++++ b/EditTextChips/src/main/java/com/novoda/demo/edittextchips/SplitwiseTagsView.java
+@@ -51,7 +51,7 @@ public class SplitwiseTagsView extends TokenCompleteTextView<SplitwiseActivity.T
+     }
+ 
+     private boolean isSelectingHint(int selStart) {
+-        return selStart > getText().length() - suffixHint.length();
++        return selStart >= getText().length() - suffixHint.length();
+     }
+ 
+     @Override
+",,0.0,user; not; allowed; choose; prompt; even; first; character,,
+test:213,low_lexical_coverage,test,213,fix,I1,Fixed vertical scrolling animation issue,"diff --git a/src/org/geometerplus/zlibrary/ui/android/view/ZLAndroidWidget.java b/src/org/geometerplus/zlibrary/ui/android/view/ZLAndroidWidget.java
+index 6869dfbeb..18ff4a3c8 100644
+--- a/src/org/geometerplus/zlibrary/ui/android/view/ZLAndroidWidget.java
++++ b/src/org/geometerplus/zlibrary/ui/android/view/ZLAndroidWidget.java
+@@ -208,7 +208,7 @@ public class ZLAndroidWidget extends View implements View.OnLongClickListener {
+ 		}
+ 		final AnimationProvider animator = getAnimationProvider();
+ 		final int w = getWidth();
+-		final int h = getHeight();
++		final int h = getMainAreaHeight();
+ 		switch (pageIndex) {
+ 			case current:
+ 				switch (myPageToScrollTo) {
+",,0.0,fixed; vertical; scrolling; animation; issue,,
+test:216,low_lexical_coverage,test,216,refactor,R3,Preserve search activity title during rotation,"diff --git a/WordPress/src/main/java/org/wordpress/android/ui/reader/ReaderPostListActivity.java b/WordPress/src/main/java/org/wordpress/android/ui/reader/ReaderPostListActivity.java
+index 36b44f9ed..8a226e536 100644
+--- a/WordPress/src/main/java/org/wordpress/android/ui/reader/ReaderPostListActivity.java
++++ b/WordPress/src/main/java/org/wordpress/android/ui/reader/ReaderPostListActivity.java
+@@ -8,7 +8,6 @@ import android.support.design.widget.CoordinatorLayout;
+ import android.support.v7.app.ActionBar;
+ import android.support.v7.app.AppCompatActivity;
+ import android.support.v7.widget.Toolbar;
+-import android.text.TextUtils;
+ import android.view.MenuItem;
+ 
+ import org.wordpress.android.R;
+@@ -61,8 +60,8 @@ public class ReaderPostListActivity extends AppCompatActivity {
+             }
+         } else if (getPostListType() == ReaderPostListType.SEARCH_RESULTS) {
+             String query = getIntent().getStringExtra(ReaderConstants.ARG_SEARCH_QUERY);
+-            if (!TextUtils.isEmpty(query) && savedInstanceState == null) {
+-                setTitle(String.format(getString(R.string.reader_title_search_results), query));
++            setTitle(String.format(getString(R.string.reader_title_search_results), query));
++            if (savedInstanceState == null) {
+                 showListFragmentForSearch(query);
+             }
+         }
+",,0.0,preserve; search; activity; title; during; rotation,,
+test:230,low_lexical_coverage,test,230,fix,Ix,Fix crash related to opening delay,"diff --git a/app/src/main/java/xyz/monkeytong/hongbao/services/HongbaoService.java b/app/src/main/java/xyz/monkeytong/hongbao/services/HongbaoService.java
+index 7425cca..8f50f00 100644
+--- a/app/src/main/java/xyz/monkeytong/hongbao/services/HongbaoService.java
++++ b/app/src/main/java/xyz/monkeytong/hongbao/services/HongbaoService.java
+@@ -90,7 +90,13 @@ public class HongbaoService extends AccessibilityService implements SharedPrefer
+             new android.os.Handler().postDelayed(
+                     new Runnable() {
+                         public void run() {
+-                            mUnpackNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
++                            try {
++                                mUnpackNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
++                            } catch (Exception e) {
++                                mMutex = false;
++                                mLuckyMoneyPicked = false;
++                                mUnpackCount = 0;
++                            }
+                         }
+                     },
+                     delayFlag);
+",,0.0,fix; crash; related; opening; delay,,
+test:234,low_lexical_coverage,test,234,refactor,R10,Delete unnecessary code,"diff --git a/WordPressAnalytics/src/main/java/org/wordpress/android/analytics/AnalyticsTracker.java b/WordPressAnalytics/src/main/java/org/wordpress/android/analytics/AnalyticsTracker.java
+index 41b54998e..9f243295e 100644
+--- a/WordPressAnalytics/src/main/java/org/wordpress/android/analytics/AnalyticsTracker.java
++++ b/WordPressAnalytics/src/main/java/org/wordpress/android/analytics/AnalyticsTracker.java
+@@ -128,19 +128,15 @@ public final class AnalyticsTracker {
+     }
+ 
+     public static void init(Context context) {
+-        loadPrefHasUserOptedOut(context, false);
++        loadPrefHasUserOptedOut(context);
+     }
+ 
+-    public static void loadPrefHasUserOptedOut(Context context, boolean manageSession) {
++    public static void loadPrefHasUserOptedOut(Context context) {
+         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+ 
+         boolean hasUserOptedOut = !prefs.getBoolean(""wp_pref_send_usage_stats"", true);
+-        if (hasUserOptedOut != mHasUserOptedOut && manageSession) {
++        if (hasUserOptedOut != mHasUserOptedOut) {
+             mHasUserOptedOut = hasUserOptedOut;
+-            if (mHasUserOptedOut) {
+-                endSession(true);
+-                clearAllData();
+-            }
+         }
+     }
+ 
+",,0.0,delete; unnecessary; code,,
+test:237,low_lexical_coverage,test,237,fix,I3,Added check for Headless environment,"diff --git a/platform/lang-impl/src/com/intellij/codeInsight/daemon/impl/IdentifierHighlighterPassFactory.java b/platform/lang-impl/src/com/intellij/codeInsight/daemon/impl/IdentifierHighlighterPassFactory.java
+index bdb0a4f..1e18f2e 100644
+--- a/platform/lang-impl/src/com/intellij/codeInsight/daemon/impl/IdentifierHighlighterPassFactory.java
++++ b/platform/lang-impl/src/com/intellij/codeInsight/daemon/impl/IdentifierHighlighterPassFactory.java
+@@ -21,6 +21,7 @@ import com.intellij.codeHighlighting.TextEditorHighlightingPass;
+ import com.intellij.codeHighlighting.TextEditorHighlightingPassFactory;
+ import com.intellij.codeHighlighting.TextEditorHighlightingPassRegistrar;
+ import com.intellij.codeInsight.CodeInsightSettings;
++import com.intellij.openapi.application.ApplicationManager;
+ import com.intellij.openapi.components.AbstractProjectComponent;
+ import com.intellij.openapi.editor.Editor;
+ import com.intellij.openapi.project.Project;
+@@ -40,7 +41,8 @@ public class IdentifierHighlighterPassFactory extends AbstractProjectComponent i
+   public TextEditorHighlightingPass createHighlightingPass(@NotNull final PsiFile file, @NotNull final Editor editor) {
+     if (editor.isOneLineMode()) return null;
+ 
+-    if (!CodeInsightSettings.getInstance().HIGHLIGHT_IDENTIFIER_UNDER_CARET) {
++    if (!CodeInsightSettings.getInstance().HIGHLIGHT_IDENTIFIER_UNDER_CARET ||
++        ApplicationManager.getApplication().isHeadlessEnvironment()) {
+       return null;
+     }
+ 
+",,0.0,added; check; headless; environment,,
+test:240,low_lexical_coverage,test,240,refactor,R5,Remove outdated spaces from error messages,"diff --git a/src/main/java/com/puppycrawl/tools/checkstyle/TreeWalker.java b/src/main/java/com/puppycrawl/tools/checkstyle/TreeWalker.java
+index ebd682881..5d81fbd86 100755
+--- a/src/main/java/com/puppycrawl/tools/checkstyle/TreeWalker.java
++++ b/src/main/java/com/puppycrawl/tools/checkstyle/TreeWalker.java
+@@ -192,7 +192,7 @@ public final class TreeWalker
+             return;
+         }
+ 
+-        final String msg = ""%s occurred during the analysis of file %s ."";
++        final String msg = ""%s occurred during the analysis of file %s."";
+ 
+         try {
+             final FileText text = FileText.fromLines(file, lines);
+",,0.0,remove; outdated; spaces; error; messages,,
+test:250,low_lexical_coverage,test,250,docs,D2,Disable built-in zoom control temporarily,"diff --git a/src/com/android/email/activity/MessageView.java b/src/com/android/email/activity/MessageView.java
+index 5f09a7d..71db1f7 100644
+--- a/src/com/android/email/activity/MessageView.java
++++ b/src/com/android/email/activity/MessageView.java
+@@ -485,7 +485,7 @@ public class MessageView extends K9Activity
+         final WebSettings webSettings = mMessageContentView.getSettings();
+ 
+         webSettings.setSupportZoom(true);
+-        webSettings.setBuiltInZoomControls(true);
++        //webSettings.setBuiltInZoomControls(true);
+         webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NARROW_COLUMNS);
+ 
+         mAttachments.setVisibility(View.GONE);
+",,0.0,disable; built; zoom; control; temporarily,,
+test:256,low_lexical_coverage,test,256,style,S2,Fix code layout,"diff --git a/subprojects/core/src/main/groovy/org/gradle/internal/filewatch/FileWatchInputs.java b/subprojects/core/src/main/groovy/org/gradle/internal/filewatch/FileWatchInputs.java
+index 6d491ae..2073210 100644
+--- a/subprojects/core/src/main/groovy/org/gradle/internal/filewatch/FileWatchInputs.java
++++ b/subprojects/core/src/main/groovy/org/gradle/internal/filewatch/FileWatchInputs.java
+@@ -35,7 +35,9 @@ public class FileWatchInputs {
+         return directories;
+     }
+ 
+-    public List<File> getFiles() { return files; }
++    public List<File> getFiles() {
++        return files;
++    }
+ 
+     public static Builder newBuilder() {
+         return new Builder();
+",,0.0,fix; code; layout,,
+test:259,low_lexical_coverage,test,259,refactor,R10,Delete unnecessary constants,"diff --git a/processing/src/main/java/io/druid/query/Result.java b/processing/src/main/java/io/druid/query/Result.java
+index c162562..a948e01 100644
+--- a/processing/src/main/java/io/druid/query/Result.java
++++ b/processing/src/main/java/io/druid/query/Result.java
+@@ -28,7 +28,6 @@ import org.joda.time.DateTime;
+ public class Result<T> implements Comparable<Result<T>>
+ {
+   public static String MISSING_SEGMENTS_KEY = ""missingSegments"";
+-  public static String MISSING_INTERVALS_KEY = ""missingIntervals"";
+ 
+   private final DateTime timestamp;
+   private final T value;
+",,0.0,delete; unnecessary; constants,,
+test:266,low_lexical_coverage,test,266,fix,I2,Fix incorrect mapping of password policy changes,"diff --git a/cas-server-support-ldap-core/src/main/java/org/apereo/cas/authentication/support/DefaultAccountStateHandler.java b/cas-server-support-ldap-core/src/main/java/org/apereo/cas/authentication/support/DefaultAccountStateHandler.java
+index 0dc674e0447..25b05e9d28f 100644
+--- a/cas-server-support-ldap-core/src/main/java/org/apereo/cas/authentication/support/DefaultAccountStateHandler.java
++++ b/cas-server-support-ldap-core/src/main/java/org/apereo/cas/authentication/support/DefaultAccountStateHandler.java
+@@ -66,7 +66,7 @@ public class DefaultAccountStateHandler implements AccountStateHandler {
+         this.errorMap.put(PasswordExpirationAccountState.Error.PASSWORD_EXPIRED, new CredentialExpiredException());
+         this.errorMap.put(PasswordPolicyControl.Error.ACCOUNT_LOCKED, new AccountLockedException());
+         this.errorMap.put(PasswordPolicyControl.Error.PASSWORD_EXPIRED, new CredentialExpiredException());
+-        this.errorMap.put(PasswordPolicyControl.Error.CHANGE_AFTER_RESET, new CredentialExpiredException());
++        this.errorMap.put(PasswordPolicyControl.Error.CHANGE_AFTER_RESET, new AccountPasswordMustChangeException());
+     }
+ 
+     @Override
+",,0.0,fix; incorrect; mapping; password; policy; changes,,
+test:293,low_lexical_coverage,test,293,feat,E1,Added check for connection status,"diff --git a/core/java/android/app/UiAutomationConnection.java b/core/java/android/app/UiAutomationConnection.java
+index 607930c..91b0d7c 100644
+--- a/core/java/android/app/UiAutomationConnection.java
++++ b/core/java/android/app/UiAutomationConnection.java
+@@ -146,7 +146,9 @@ public final class UiAutomationConnection extends IUiAutomationConnection.Stub {
+     @Override
+     public void shutdown() {
+         synchronized (mLock) {
+-            throwIfCalledByNotTrustedUidLocked();
++            if (isConnectedLocked()) {
++                throwIfCalledByNotTrustedUidLocked();
++            }
+             throwIfShutdownLocked();
+             mIsShutdown = true;
+             if (isConnectedLocked()) {
+",,0.0,added; check; connection; status,,
+test:299,low_lexical_coverage,test,299,test,T1,Modified logic for timeout judgment,"diff --git a/subprojects/gradle-core/src/test/groovy/org/gradle/util/MultithreadedTestCase.java b/subprojects/gradle-core/src/test/groovy/org/gradle/util/MultithreadedTestCase.java
+index f0317e8..9b0a4ef 100755
+--- a/subprojects/gradle-core/src/test/groovy/org/gradle/util/MultithreadedTestCase.java
++++ b/subprojects/gradle-core/src/test/groovy/org/gradle/util/MultithreadedTestCase.java
+@@ -115,8 +115,10 @@ public class MultithreadedTestCase {
+         ThreadHandle threadHandle = start(closure);
+         threadHandle.waitFor();
+         Date end = new Date();
+-        if (end.getTime() - start.getTime() > units.toMillis(value) + 300) {
+-            throw new RuntimeException(""Action did not complete within expected time."");
++        long actual = end.getTime() - start.getTime();
++        long expected = units.toMillis(value);
++        if (actual > expected + 300) {
++            throw new RuntimeException(String.format(""Action did not complete within expected time. Expected <= %d ms, was %d ms."", expected, actual));
+         }
+         return threadHandle;
+     }
+",,0.0,modified; logic; timeout; judgment,,
