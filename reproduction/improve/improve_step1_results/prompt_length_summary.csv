@@ -1,0 +1,5 @@
+split,input_view,samples,max_length,over_limit_count,over_limit_rate,mean_tokens,median_tokens,p90_tokens,max_tokens,model_id,model_revision
+train,diff_only,4611,512,322,0.06983300802428974,341.49295163738884,316.0,481.0,2808,meta-llama/Llama-2-7b-hf,
+train,chsum_prompt,4611,512,392,0.0850140967252223,359.49295163738884,334.0,499.0,2826,meta-llama/Llama-2-7b-hf,
+test,diff_only,518,512,34,0.06563706563706563,334.7992277992278,310.0,475.3,1102,meta-llama/Llama-2-7b-hf,
+test,chsum_prompt,518,512,40,0.07722007722007722,352.7992277992278,328.0,493.3,1120,meta-llama/Llama-2-7b-hf,

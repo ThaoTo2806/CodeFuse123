@@ -1,0 +1,16 @@
+{
+  "model_id": "meta-llama/Llama-2-7b-hf",
+  "model_revision": null,
+  "model_revision_lock_used": null,
+  "tokenizer_fingerprint_sha256": null,
+  "dataset_dir": "/kaggle/working/CodeFuse123/dataset",
+  "train_path": "/kaggle/working/CodeFuse123/dataset/train.json",
+  "test_path": "/kaggle/working/CodeFuse123/dataset/test.json",
+  "train_samples": 4611,
+  "test_samples": 518,
+  "max_length": 512,
+  "views": {
+    "diff_only": "Raw code diff with tokenizer special tokens.",
+    "chsum_prompt": "CHSUM wrapper around the raw code diff."
+  }
+}

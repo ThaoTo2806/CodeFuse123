@@ -2,7 +2,7 @@
 
 > **Tên làm việc (có thể đổi).** Cụm _"Functionally Hard Negatives"_ chỉ giữ nếu kiểm tra thủ công cho thấy các ví dụ âm thật sự khác chức năng. Nếu không, đổi thành _Category-Filtered Hard Negatives_.
 
-**Trạng thái (28/10/2026):** đã hoàn thành reproduction pipeline HQCM ở task phân loại và audit dữ liệu. **Chưa** có baseline cho task tạo câu mô tả. Mọi nội dung trong mục "Giả thuyết" vẫn là giả thuyết cần kiểm chứng.
+**Trạng thái (28/10/2026):** đã hoàn thành reproduction pipeline HQCM ở task phân loại và audit dữ liệu/tokenizer. **Chưa** có baseline cho task tạo câu mô tả. Mọi nội dung trong mục "Giả thuyết" vẫn là giả thuyết cần kiểm chứng.
 
 ---
 
@@ -30,7 +30,18 @@ Phát hiện và bài học từ reproduction:
 
 **Độ dài.** Diff: trung vị 917 ký tự, p90 1.472, tối đa 10.363. **Message rất ngắn:** trung vị 6 từ, p90 11, tối đa 24 (gần như tiêu đề commit, không phải câu tóm tắt dài).
 
-**Độ cắt (ước lượng theo ký tự, chưa có tokenizer):** phần lớn việc "vượt 512 token" đến từ **template cố định (~400 token)**, không phải từ diff. Với left-truncation, template bị cắt trước nên ít hại. Diff thực sự bị cắt khoảng **2–10%** tùy giả định ký tự/token. Với cắt phải như repo gốc thì gần như mọi mẫu mất đuôi (mất nhãn). _(Cần chạy lại với tokenizer thật để có số chính xác.)_
+**Độ dài token (đã đo trên Kaggle bằng tokenizer Llama 2 thật).** Audit dùng 4.611 mẫu train và 518 mẫu test từ dataset gốc. `diff_only` là diff thô; `chsum_prompt` là diff đặt trong template CHSUM tạo commit message. Đây **không phải** template CHCL dài dùng cho phân loại.
+
+| Split         | Dạng input   | Vượt 512 token | Trung bình | Trung vị |   P90 | Tối đa |
+| :------------ | :----------- | -------------: | ---------: | -------: | ----: | -----: |
+| Train (4.611) | Diff thô     |    322 (6,98%) |      341,5 |      316 |   481 |  2.808 |
+| Train (4.611) | Prompt CHSUM |    392 (8,50%) |      359,5 |      334 |   499 |  2.826 |
+| Test (518)    | Diff thô     |     34 (6,56%) |      334,8 |      310 | 475,3 |  1.102 |
+| Test (518)    | Prompt CHSUM |     40 (7,72%) |      352,8 |      328 | 493,3 |  1.120 |
+
+**Nhận xét.** Trong audit này, template CHSUM làm độ dài trung bình tăng 18 token; tỷ lệ vượt ngưỡng tăng 1,52 điểm phần trăm ở train và 1,16 điểm ở test. Phần lớn mẫu vẫn nằm trong 512 token, nhưng có đuôi dài tới 2.826 token nên cần truncation nhất quán ở train và inference. Số liệu này không xác nhận giả thuyết template CHCL chiếm khoảng 400 token; đó là template khác và cần đo riêng nếu dùng cho task phân loại.
+
+Kết quả đã lưu trong [prompt_length_summary.csv](improve_step1_results/prompt_length_summary.csv), [prompt_token_lengths.csv](improve_step1_results/prompt_token_lengths.csv) và [tokenizer_audit_metadata.json](improve_step1_results/tokenizer_audit_metadata.json). Notebook ghi nhận lần chạy là [tokenizer123.ipynb](tokenizer123.ipynb). Metadata hiện chưa có `model_revision` (đang `null`), vì vậy bước đếm đã hoàn tất nhưng yêu cầu khóa commit hash của tokenizer **chưa** hoàn tất; không nên xem số liệu này là đã tái lập chính xác theo một revision cố định.
 
 **RQ0 sơ bộ (định danh dạng code trong message so với diff đầy đủ):**
 
@@ -82,7 +93,7 @@ Phát hiện và bài học từ reproduction:
 
 | #   | Việc                                                                                                                                                               | Chi phí    | Điều kiện hoàn thành                                     |
 | :-- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------- | :------------------------------------------------------- |
-| 1   | Chạy `hqcm_audit.py` với tokenizer thật (`--tokenizer meta-llama/Llama-2-7b-hf`); lưu `prompt_length_summary.csv`; khóa `model_revision`                           | ~15 phút   | Có tỉ lệ cắt chính xác (có/không template)               |
+| 1   | Đếm token trên Kaggle bằng tokenizer Llama 2; lưu CSV (đã xong, xem kết quả ở mục 1.2); khóa `model_revision` vẫn cần làm                                          | ~15 phút   | Tỉ lệ vượt 512 đã đo; còn thiếu revision cố định         |
 | 2   | Gán nhãn thủ công ~100 mẫu: 50 mẫu có định danh "không được hỗ trợ" + 50 mẫu phủ từ thấp. Nhãn: _bịa thật / khái niệm hợp lệ / ngữ cảnh ngoài diff / khác_         | 2–3 giờ    | Có tỉ lệ bịa thật trong tham chiếu                       |
 | 3   | **Cổng quyết định A/B (xem dưới)**                                                                                                                                 | –          | Chọn hướng                                               |
 | 4   | Tách cặp (diff, message), tạo validation từ train, dựng baseline CE tóm tắt bằng harness chung (một hàm tokenize cho train/infer), model nhỏ 1.5–3B, tập con trước | ~1 ngày    | Output không suy biến, loss không NaN, đo thời gian/VRAM |
