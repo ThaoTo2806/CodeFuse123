@@ -1,0 +1,37 @@
+{
+  "accuracy": 0.7799227799227799,
+  "macro_f1_8": 0.8383858593097724,
+  "macro_precision_8": 0.8402006020950139,
+  "macro_recall_8": 0.8392859875425664,
+  "micro_f1_8": 0.7799227799227799,
+  "invalid_count": 0,
+  "invalid_rate": 0.0,
+  "ece_10_bins_raw": 0.19477184220400565,
+  "ece_note": "Uncalibrated ECE of softmax over summed label-plus-EOS log-likelihoods; exploratory only.",
+  "bootstrap_resamples": 2000,
+  "bootstrap_seed": 42,
+  "n_samples": 518,
+  "labels": [
+    "style",
+    "docs",
+    "test",
+    "build",
+    "cicd",
+    "fix",
+    "feat",
+    "refactor"
+  ],
+  "base_model": "meta-llama/Llama-2-7b-hf",
+  "base_model_revision": "01c7f73d771dfac7d292323805ebc428287df4f9",
+  "adapter_dir": "/kaggle/input/datasets/phpadmin123/adapter-run1/hqcm_llama2_7b_chcl_fixed_v2",
+  "max_input_tokens_left_truncated": 512,
+  "scoring": "summed conditional token log-likelihood of label plus EOS",
+  "accuracy_bootstrap_95ci": [
+    0.7432432432432432,
+    0.8166023166023166
+  ],
+  "macro_f1_8_bootstrap_95ci": [
+    0.7947210004208739,
+    0.8751543203687774
+  ]
+}
