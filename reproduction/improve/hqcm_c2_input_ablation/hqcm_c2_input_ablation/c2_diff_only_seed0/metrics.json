@@ -1,0 +1,21 @@
+{
+  "experiment": "C2_input_ablation",
+  "input_variant": "diff_only",
+  "model_id": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+  "model_revision": "2e1fd397ee46e1388853d2af2c993145b0f1098a",
+  "seed": 0,
+  "split_seed": 42,
+  "train_samples": 4149,
+  "validation_samples": 462,
+  "max_length": 512,
+  "mean_prompt_tokens_before_truncation": 292.84199134199133,
+  "median_prompt_tokens_before_truncation": 272.0,
+  "train_seconds": 4763.7327047240005,
+  "peak_gpu_memory_reserved_gb": 6.0,
+  "train_loss": 0.4285572511809213,
+  "accuracy": 0.7532467532467533,
+  "macro_f1_8": 0.7957414013483508,
+  "ece_10_bins_raw": 0.11950894590322073,
+  "invalid_count": 0,
+  "dataset_train_sha256": "a6430d65f194f5656b4704848d56c7e924bd99532ec78361b18c387a2f44c543"
+}

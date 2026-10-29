@@ -1,0 +1,21 @@
+{
+  "experiment": "C2_input_ablation",
+  "input_variant": "both",
+  "model_id": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+  "model_revision": "2e1fd397ee46e1388853d2af2c993145b0f1098a",
+  "seed": 0,
+  "split_seed": 42,
+  "train_samples": 4149,
+  "validation_samples": 462,
+  "max_length": 512,
+  "mean_prompt_tokens_before_truncation": 304.7012987012987,
+  "median_prompt_tokens_before_truncation": 284.5,
+  "train_seconds": 4839.376993065,
+  "peak_gpu_memory_reserved_gb": 7.248046875,
+  "train_loss": 0.38391560016911924,
+  "accuracy": 0.7878787878787878,
+  "macro_f1_8": 0.8314135673632241,
+  "ece_10_bins_raw": 0.09353262779516575,
+  "invalid_count": 0,
+  "dataset_train_sha256": "a6430d65f194f5656b4704848d56c7e924bd99532ec78361b18c387a2f44c543"
+}

@@ -23,22 +23,42 @@ Bài toán đang làm là **phân loại loại commit** thành 8 nhãn (`style`
 
 Đây là pilot một seed, không khẳng định template dài là nguyên nhân duy nhất. Xem [kế hoạch và nhận xét C1](README_HUONG_B_CHCL.md), [metrics original](hqcm_c1_prompt_ablation/hqcm_c1_prompt_ablation/c1_original_seed0/metrics.json) và [metrics compact](hqcm_c1_prompt_compact_ablation/hqcm_c1_prompt_compact_ablation/c1_compact_seed0/metrics.json).
 
-## Đang làm tiếp
+## Kết quả mới nhất: C2 input ablation
 
-**C2: đo nguồn thông tin hữu ích.** So sánh `summary-only`, `diff-only`, `diff + summary` trên cùng split, seed, model và cấu hình train. Nhánh `diff + summary` chính là C1 compact seed 0 đã chạy, nên không cần train lại; cell mới chạy hai nhánh còn thiếu. Chạy trên validation, không dùng test để chọn cấu hình.
+Đã hoàn tất ngày 30/10/2026 trên validation: Qwen2.5-Coder-1.5B-Instruct, revision `2e1fd397ee46e1388853d2af2c993145b0f1098a`, seed 0, split seed 42, train/validation 4.149/462, cùng hash dữ liệu train. Ba nhánh dùng chung cấu hình QLoRA 4-bit, hai epoch và cách chấm điểm tập đóng tám nhãn.
 
-Cell và hướng dẫn: [KAGGLE_C2_INPUT_ABLATION.md](KAGGLE_C2_INPUT_ABLATION.md). Kết quả C2 sẽ được ghi tại mục dưới đây và lưu metrics/predictions/manifest trong Kaggle Output.
+| Đầu vào        |   Accuracy | Macro-F1 (8 nhãn) |   F1 `fix` |  F1 `feat` | F1 `refactor` |    ECE thô | Prompt trung bình |      Train | VRAM đỉnh |
+| :------------- | ---------: | ----------------: | ---------: | ---------: | ------------: | ---------: | ----------------: | ---------: | --------: |
+| Summary-only   |     0,6753 |            0,7390 |     0,6186 |     0,6730 |        0,6985 |     0,0967 |        39,9 token | 4.322 giây |   2,14 GB |
+| Diff-only      |     0,7532 |            0,7957 |     0,7013 |     0,7596 |        0,7076 |     0,1195 |       292,8 token | 4.764 giây |   6,00 GB |
+| Diff + summary | **0,7879** |        **0,8314** | **0,7500** | **0,8100** |    **0,7399** | **0,0935** |       304,7 token | 4.839 giây |   7,25 GB |
+
+**Nhận xét:** Trong lần chạy này, dùng cả diff và message đứng đầu; so với chỉ diff, tăng 0,0346 Accuracy và 0,0357 Macro-F1 (khoảng 3,5 điểm phần trăm). Diff-only tốt hơn summary-only 0,0567 Macro-F1, nên diff là nguồn quan trọng hơn trong ba cấu hình đã thử. Dùng cả hai cũng cho F1 cao nhất trong ba lớp lớn `fix`, `feat`, `refactor`. Lợi ích đi kèm thời gian train và VRAM cao hơn diff-only.
+
+Đây vẫn là **một seed trên một validation split**, chưa có CI; chưa đủ để kết luận message luôn cải thiện kết quả. Kết luận chỉ áp dụng cho prompt, max length và cách train/chấm điểm đã dùng. ECE là thô, chưa calibration; invalid bằng 0 do decoder chỉ chọn tám nhãn. Cảnh báo CUDA stream trong log không làm lượt chạy dừng; cả ba nhánh hoàn tất chấm validation và lưu metrics. C1 compact trước đó có `model_revision = null` và metric khác; không gộp nó với bảng C2 đã khóa revision.
+
+Artifact C2: [bảng tổng hợp](hqcm_c2_input_ablation/hqcm_c2_input_ablation/all_experiments_summary.csv), [summary-only metrics](hqcm_c2_input_ablation/hqcm_c2_input_ablation/c2_summary_only_seed0/metrics.json), [diff-only metrics](hqcm_c2_input_ablation/hqcm_c2_input_ablation/c2_diff_only_seed0/metrics.json), [both metrics](hqcm_c2_input_ablation/hqcm_c2_input_ablation/c2_both_seed0/metrics.json). Mỗi run còn có predictions, manifest và adapter.
+
+## Việc tiếp theo
+
+1. **C5 xác nhận độ ổn định:** giữ nguyên split seed 42, model revision, dữ liệu và cấu hình; chạy train seed 1 và 2 cho `both` và `diff_only`. Không cần lặp `summary_only` trước mắt vì thấp hơn rõ trong pilot. So sánh trên cùng 462 mẫu, báo cáo từng seed, trung bình/độ lệch chuẩn và bootstrap CI; chưa mở test để chọn.
+2. **Sau C5, làm C4 pilot:** trên đầu vào đã chọn (nhiều khả năng `both`), so CE chuẩn với weighted CE hoặc focal loss để nhắm `fix`/`refactor`. Giữ cùng split, seed, backbone và scoring; bắt đầu một biến thể loss, qua cổng chất lượng rồi mới nhân thêm seed.
+3. **Chỉ khi đã khóa cấu hình:** đánh giá test chính thức một lần, lưu dự đoán và so sánh cặp với baseline reproduction/C3. Không chọn cấu hình bằng test.
+
+Cell C2 đã chạy: [hướng dẫn và cell Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cập nhật các lần chạy tiếp theo vào bảng nhật ký bên dưới.
 
 ## Nhật ký kết quả
 
-| Ngày       | Thí nghiệm         | Cấu hình/split                               | Kết quả chính                                | Trạng thái / ghi chú                         |
-| :--------- | :----------------- | :------------------------------------------- | :------------------------------------------- | :------------------------------------------- |
-| 28/10/2026 | Reproduction Run 1 | Llama-2-7B QLoRA; test 518                   | Accuracy 0,7761; Macro-F1 0,8410             | Baseline reproduction; 1 output invalid      |
-| 28/10/2026 | C3                 | Adapter Run 1; test 518; constrained scoring | Accuracy 0,7799; Macro-F1 0,8384; ECE 0,1948 | Hoàn tất; ECE thô, chưa calibration          |
-| 29/10/2026 | C1 original        | Qwen2.5-Coder-1.5B; seed 0; split 4.149/462  | Accuracy 0,3052; Macro-F1 0,2611             | Pilot validation                             |
-| 29/10/2026 | C1 compact         | Cùng cấu hình/split với original             | Accuracy 0,7900; Macro-F1 0,8560             | Pilot validation; dùng làm C2 diff + summary |
-| Chưa chạy  | C2 summary-only    | Cùng model/split/seed/config C1              | Chờ metrics.json                             | Chạy cell C2                                 |
-| Chưa chạy  | C2 diff-only       | Cùng model/split/seed/config C1              | Chờ metrics.json                             | Chạy cell C2                                 |
+| Ngày       | Thí nghiệm         | Cấu hình/split                                | Kết quả chính                                | Trạng thái / ghi chú            |
+| :--------- | :----------------- | :-------------------------------------------- | :------------------------------------------- | :------------------------------ |
+| 28/10/2026 | Reproduction Run 1 | Llama-2-7B QLoRA; test 518                    | Accuracy 0,7761; Macro-F1 0,8410             | Baseline; 1 output invalid      |
+| 28/10/2026 | C3                 | Adapter Run 1; test 518; constrained scoring  | Accuracy 0,7799; Macro-F1 0,8384; ECE 0,1948 | Hoàn tất; ECE thô               |
+| 29/10/2026 | C1 original        | Qwen2.5-Coder-1.5B; seed 0; split 4.149/462   | Accuracy 0,3052; Macro-F1 0,2611             | Pilot; revision chưa khóa       |
+| 29/10/2026 | C1 compact         | Cùng cấu hình/split với original              | Accuracy 0,7900; Macro-F1 0,8560             | Pilot; revision chưa khóa       |
+| 30/10/2026 | C2 summary-only    | Qwen2.5-Coder-1.5B; rev `2e1fd397`; seed 0/42 | Accuracy 0,6753; Macro-F1 0,7390; ECE 0,0967 | Validation; 1 seed              |
+| 30/10/2026 | C2 diff-only       | Cùng revision/split/seed                      | Accuracy 0,7532; Macro-F1 0,7957; ECE 0,1195 | Validation; 1 seed              |
+| 30/10/2026 | C2 both            | Cùng revision/split/seed                      | Accuracy 0,7879; Macro-F1 0,8314; ECE 0,0935 | Tốt nhất C2; validation; 1 seed |
+| Tiếp theo  | C5 seed 1/2        | `both` và `diff_only`; cùng split/revision    | Chờ chạy                                     | Xác nhận độ ổn định trước C4    |
 
 ## Quy tắc ghi kết quả mới
 
