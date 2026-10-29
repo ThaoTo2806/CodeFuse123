@@ -45,7 +45,7 @@ Artifact C2: [bảng tổng hợp](hqcm_c2_input_ablation/hqcm_c2_input_ablation
 2. **Sau C5, làm C4 pilot:** trên đầu vào đã chọn (nhiều khả năng `both`), so CE chuẩn với weighted CE hoặc focal loss để nhắm `fix`/`refactor`. Giữ cùng split, seed, backbone và scoring; bắt đầu một biến thể loss, qua cổng chất lượng rồi mới nhân thêm seed.
 3. **Chỉ khi đã khóa cấu hình:** đánh giá test chính thức một lần, lưu dự đoán và so sánh cặp với baseline reproduction/C3. Không chọn cấu hình bằng test.
 
-Cell C2 đã chạy: [hướng dẫn và cell Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cập nhật các lần chạy tiếp theo vào bảng nhật ký bên dưới.
+Cell C2 đã chạy: [hướng dẫn và cell Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell tiếp theo: [C5 seed confirmation](KAGGLE_C5_SEED_CONFIRMATION.md); chạy `diff_only` và `both` ở seed 1/2, giữ nguyên SHA dữ liệu và model revision trong cell. Cập nhật các lần chạy tiếp theo vào bảng nhật ký bên dưới.
 
 ## Nhật ký kết quả
 
