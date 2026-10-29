@@ -38,6 +38,28 @@ Cải thiện độ tin cậy của phân loại commit bằng model nhỏ, dùn
 | C5  | Tăng độ chắc chắn của kết luận   | ≥3 seed hoặc 5-fold, bootstrap CI 95%, kiểm định cặp, báo cáo theo lớp      |
 | C6  | Baseline và chi phí              | UniXcoder/CodeBERT và code-SLM 1.5–3B; VRAM, thời gian train/inference      |
 
+### Kết quả pilot C1: prompt original và compact
+
+Đã chạy hai biến thể trên cùng model `Qwen/Qwen2.5-Coder-1.5B-Instruct`, seed 0 và split train/validation 4149/462. Cả hai dùng tập đóng tám nhãn và chọn nhãn bằng tổng log-likelihood của nhãn cộng EOS.
+
+| Chỉ số                                    |    Original |     Compact | Chênh lệch (compact − original) |
+| :---------------------------------------- | ----------: | ----------: | ------------------------------: |
+| Accuracy                                  |      0,3052 |      0,7900 |                         +0,4848 |
+| Macro-F1 (8 nhãn)                         |      0,2611 |      0,8560 |                         +0,5949 |
+| Macro precision                           |      0,3213 |      0,8654 |                         +0,5441 |
+| Macro recall                              |      0,3184 |      0,8533 |                         +0,5349 |
+| Weighted-F1                               |      0,3009 |      0,7911 |                         +0,4902 |
+| ECE thô, 10 bins                          |      0,4032 |      0,0820 |                         −0,3212 |
+| Prompt tokens trung bình trước truncation |       603,7 |       304,7 |                 −299,0 (−49,5%) |
+| Prompt tokens trung vị trước truncation   |       583,5 |       284,5 |                 −299,0 (−51,2%) |
+| Thời gian train                           | 5374,1 giây | 4575,1 giây |                     −798,9 giây |
+
+**Nhận xét:** Compact vượt rõ original trên các metric tổng hợp của validation. Cải thiện F1 dễ thấy ở `fix` (0,1987 → 0,7315), `feat` (0,2177 → 0,7857), `docs` (0,1739 → 0,8125) và `refactor` (0,4323 → 0,7710). Prompt compact cũng ngắn hơn khoảng một nửa và lượt chạy này có thời gian train thấp hơn khoảng 13 phút 19 giây. Kết quả phù hợp với giả thuyết rằng template dài làm giảm hiệu quả; tuy nhiên, đây mới là so sánh hai cấu hình trong một lần chạy, chưa chứng minh prompt length là nguyên nhân duy nhất.
+
+**Giới hạn diễn giải:** Đây là kết quả validation với một seed, chưa có CI hoặc lặp lại nhiều seed. ECE là phép đo thăm dò trên softmax chưa hiệu chỉnh của tám điểm log-likelihood, không chứng minh xác suất đã calibrated. `invalid_count = 0` là hệ quả của decoding giới hạn sẵn tám nhãn. Các lớp `style`, `build`, `cicd` chỉ có 9 mẫu mỗi lớp nên F1 cao của compact ở các lớp này chưa ổn định. Cần xác nhận lại tối thiểu seed 1/2, giữ nguyên split và cấu hình còn lại, rồi mới chốt kết luận C1; không dùng kết quả validation này thay cho đánh giá test chính thức.
+
+Artifact: [metrics original](hqcm_c1_prompt_ablation/hqcm_c1_prompt_ablation/c1_original_seed0/metrics.json) và [metrics compact](hqcm_c1_prompt_compact_ablation/hqcm_c1_prompt_compact_ablation/c1_compact_seed0/metrics.json).
+
 Quy tắc tài nguyên: C1/C2/C4 chạy ablation trên một model nhỏ. Dùng 7B một lần cho cấu hình cuối để so với baseline paper; một lượt 7B trước đây mất khoảng 6,7 giờ GPU.
 
 ## 3. Kế hoạch
@@ -440,29 +462,3 @@ print("Saved C3 artifacts to:", OUTPUT_DIR)
 ## 6. Báo cáo sau mỗi lần chạy
 
 Sau khi chạy cell Kaggle, ghi lại vào README_v4 (hoặc bản kế hoạch đang dùng): cấu hình, model revision, adapter revision/hash, seed, split, Accuracy, Macro-F1 (8 nhãn), F1 từng lớp, ECE, CI, thời gian và VRAM. Nêu rõ mọi lỗi hoặc kiểm tra cổng chưa đạt; không biến giả thuyết thành kết quả.
-
-## Kết quả C1 pilot: prompt gốc vs prompt compact
-
-Hai nhánh được chạy trên cùng Qwen2.5-Coder-1.5B-Instruct, train 4.149 mẫu, validation stratified 462 mẫu (`split_seed=42`, `train_seed=0`), giới hạn 512 token. Chỉ khác prompt; cả hai dùng constrained scoring trên tám nhãn. Kết quả do người dùng chạy và cung cấp ngày 29/10/2026:
-
-| Metric                       |  Prompt gốc | Prompt compact | Chênh lệch compact − gốc |
-| :--------------------------- | ----------: | -------------: | -----------------------: |
-| Validation Accuracy          |      0,3052 |         0,7900 |  +0,4848 (+48,48 điểm %) |
-| Validation Macro-F1 (8 nhãn) |      0,2611 |         0,8560 |  +0,5949 (+59,49 điểm %) |
-| ECE thô, 10 bins             |      0,4032 |         0,0820 |                  −0,3212 |
-| Độ dài prompt trung bình     | 603,7 token |    304,7 token |                   −49,5% |
-| Độ dài prompt trung vị       | 583,5 token |    284,5 token |                   −51,3% |
-| Thời gian train              |  5.374 giây |     4.575 giây |       −799 giây (−14,9%) |
-| Train loss cuối              |      0,4167 |         0,3798 |                  −0,0369 |
-
-F1 `fix`: 0,1987 → 0,7315; F1 `refactor`: 0,4323 → 0,7710. Prompt compact có kết quả validation tốt hơn rõ rệt trong pilot này, giảm độ dài trung bình khoảng một nửa và giảm thời gian train khoảng 13 phút. Prompt gốc dài trung bình 603,7 token nên một phần lớn mẫu bị left-truncate ở giới hạn 512; đây là một giải thích khả dĩ cho chênh lệch, chưa phải kết luận nhân quả độc lập.
-
-**Giới hạn:** đây mới là một seed trên validation nội bộ 462 mẫu, không phải test chính thức 518 mẫu; chưa có khoảng tin cậy, kiểm định cặp hay ba seed. `model_revision` của Qwen vẫn `null`. ECE là softmax thô trên log-likelihood, chưa calibration. Không dùng các số này làm kết quả cuối hoặc tuyên bố cải thiện đã được xác nhận. Cả hai nhánh có `invalid_count=0` vì decoder bị ràng buộc vào tám nhãn. Nhánh original phát cảnh báo PyTorch về mismatch CUDA stream nhưng train và validation vẫn hoàn tất; theo dõi lại cảnh báo này khi chạy nhiều seed.
-
-Artifact nằm tại Kaggle Output của hai session: `/kaggle/working/hqcm_c1_prompt_ablation/c1_original_seed0` và `/kaggle/working/hqcm_c1_prompt_compact_ablation/c1_compact_seed0`. Cần tải/đính kèm lại nếu muốn lưu bền.
-
-## Bước tiếp theo: C2 input-source ablation
-
-Chạy [KAGGLE_C2_INPUT_ABLATION.md](KAGGLE_C2_INPUT_ABLATION.md) trên ba Kaggle session song song với `summary_only`, `diff_only`, `both`. Giữ nguyên model, split seed, train seed và huấn luyện như C1; chỉ thay nguồn input. Cell tạo validation stratified từ train, không đọc test chính thức. Chọn hướng tiếp theo dựa trên validation, rồi mới chạy test khi cấu hình đã được khóa.
-
-## Kết quả C3 đã chạy: 7B constrained scoring
