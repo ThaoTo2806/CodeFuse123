@@ -1,10 +1,10 @@
 # Evidence-Aware Fine-Tuning for Faithful Code Change Summarization
 
-> Kế hoạch Hướng B (cải tiến phân loại CHCL): [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md). C3 trên adapter Run 1 đã chạy (Accuracy 0,7799; Macro-F1 0,8384; ECE thô 0,1948); cell kế tiếp là C1 prompt ablation trên model nhỏ: [KAGGLE_C1_PROMPT_ABLATION.md](KAGGLE_C1_PROMPT_ABLATION.md).
+> Theo dõi tóm tắt reproduction, kết quả và việc tiếp theo: [THEO_DOI_TIEN_DO.md](THEO_DOI_TIEN_DO.md). C1 prompt ablation đã chạy; thí nghiệm tiếp theo là C2 (summary-only, diff-only, cả hai): [KAGGLE_C2_INPUT_ABLATION.md](KAGGLE_C2_INPUT_ABLATION.md). Kế hoạch CHCL chi tiết: [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md).
 
 > **Tên làm việc (có thể đổi).** Cụm _"Functionally Hard Negatives"_ chỉ giữ nếu kiểm tra thủ công cho thấy các ví dụ âm thật sự khác chức năng. Nếu không, đổi thành _Category-Filtered Hard Negatives_.
 
-**Trạng thái (28/10/2026):** đã hoàn thành reproduction pipeline HQCM ở task phân loại, audit dữ liệu và đo độ dài token. **Chưa** có baseline cho task tạo câu mô tả. Mọi nội dung trong mục "Giả thuyết" vẫn là giả thuyết cần kiểm chứng.
+**Trạng thái (29/10/2026):** đã hoàn thành reproduction CHCL, audit dữ liệu, C3 trên test chính thức và pilot C1 trên validation. C1 compact đang là ứng viên tốt nhưng mới có một seed. Tiếp tục C2 trên validation; chưa dùng test để chọn cấu hình. Mọi nội dung trong mục "Giả thuyết" vẫn là giả thuyết cần kiểm chứng.
 
 ---
 
