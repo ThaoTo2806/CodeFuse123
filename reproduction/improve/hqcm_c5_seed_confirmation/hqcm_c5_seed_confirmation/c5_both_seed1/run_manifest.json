@@ -1,0 +1,105 @@
+{
+  "experiment": "C5_seed_confirmation",
+  "run_name": "c5_both_seed1",
+  "input_variant": "both",
+  "model_id": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+  "model_revision": "2e1fd397ee46e1388853d2af2c993145b0f1098a",
+  "seed": 1,
+  "split_seed": 42,
+  "train_samples": 4149,
+  "validation_samples": 462,
+  "max_length": 512,
+  "mean_prompt_tokens_before_truncation": 304.7012987012987,
+  "median_prompt_tokens_before_truncation": 284.5,
+  "train_seconds": 4884.030466803,
+  "peak_gpu_memory_reserved_gb": 9.12890625,
+  "train_loss": 0.3859467573147483,
+  "accuracy": 0.7965367965367965,
+  "macro_f1_8": 0.8503386807369344,
+  "ece_10_bins_raw": 0.08523691094024874,
+  "ece_note": "Exploratory, uncalibrated softmax over eight label log-likelihoods.",
+  "invalid_count": 0,
+  "bootstrap_resamples": 2000,
+  "bootstrap_seed": 42001,
+  "accuracy_bootstrap_95ci": [
+    0.7597402597402597,
+    0.8311688311688312
+  ],
+  "macro_f1_8_bootstrap_95ci": [
+    0.8041322467808077,
+    0.8848308250130406
+  ],
+  "per_class": {
+    "style": {
+      "precision": 1.0,
+      "recall": 0.8888888888888888,
+      "f1-score": 0.9411764705882353,
+      "support": 9.0
+    },
+    "docs": {
+      "precision": 0.8928571428571429,
+      "recall": 0.6944444444444444,
+      "f1-score": 0.78125,
+      "support": 36.0
+    },
+    "test": {
+      "precision": 0.9318181818181818,
+      "recall": 0.9111111111111111,
+      "f1-score": 0.9213483146067416,
+      "support": 45.0
+    },
+    "build": {
+      "precision": 0.9,
+      "recall": 1.0,
+      "f1-score": 0.9473684210526315,
+      "support": 9.0
+    },
+    "cicd": {
+      "precision": 0.8888888888888888,
+      "recall": 0.8888888888888888,
+      "f1-score": 0.8888888888888888,
+      "support": 9.0
+    },
+    "fix": {
+      "precision": 0.7037037037037037,
+      "recall": 0.7983193277310925,
+      "f1-score": 0.7480314960629921,
+      "support": 119.0
+    },
+    "feat": {
+      "precision": 0.8080808080808081,
+      "recall": 0.7843137254901961,
+      "f1-score": 0.7960199004975125,
+      "support": 102.0
+    },
+    "refactor": {
+      "precision": 0.7906976744186046,
+      "recall": 0.7669172932330827,
+      "f1-score": 0.7786259541984732,
+      "support": 133.0
+    },
+    "accuracy": 0.7965367965367965,
+    "macro avg": {
+      "precision": 0.8645057999709163,
+      "recall": 0.8416104599734631,
+      "f1-score": 0.8503386807369344,
+      "support": 462.0
+    },
+    "weighted avg": {
+      "precision": 0.8019533532193353,
+      "recall": 0.7965367965367965,
+      "f1-score": 0.7972935237504556,
+      "support": 462.0
+    }
+  },
+  "dataset_train_sha256": "a6430d65f194f5656b4704848d56c7e924bd99532ec78361b18c387a2f44c543",
+  "dataset_dir": "/kaggle/working/CodeFuse123/dataset",
+  "dtype": "float16",
+  "quantization": "4-bit NF4 with double quantization",
+  "lora_rank": 16,
+  "lora_alpha": 32,
+  "learning_rate": 0.0002,
+  "num_epochs": 2,
+  "validation_fraction": 0.1,
+  "gradient_accumulation_steps": 8
+}

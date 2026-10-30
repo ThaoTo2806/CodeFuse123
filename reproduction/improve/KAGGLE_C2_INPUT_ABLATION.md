@@ -36,8 +36,14 @@ import time
 import numpy as np
 import pandas as pd
 import torch
+from huggingface_hub import HfApi
 from datasets import Dataset
-from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
+from peft import (
+    LoraConfig,
+    TaskType,
+    get_peft_model,
+    prepare_model_for_kbit_training,
+)
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import train_test_split
 from transformers import (
@@ -50,11 +56,15 @@ from transformers import (
     set_seed,
 )
 
-DATA_DIR = None  # Example: Path("/kaggle/input/hqcm/dataset")
-INPUT_VARIANT = "summary_only"  # Run separate sessions: summary_only, diff_only, both.
+# ============================================================
+# CONFIG
+# ============================================================
+DATA_DIR = Path("/kaggle/working/CodeFuse123/dataset")
 MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
-MODEL_REVISION = None  # Set the same resolved commit SHA in every comparison session.
 OUTPUT_ROOT = Path("/kaggle/working/hqcm_c2_input_ablation")
+
+INPUT_VARIANTS = ["summary_only", "diff_only", "both"]
+
 MAX_LENGTH = 512
 VALIDATION_FRACTION = 0.10
 SPLIT_SEED = 42
@@ -65,225 +75,138 @@ LORA_RANK = 16
 LORA_ALPHA = 32
 MICRO_BATCH_SIZE = 1
 GRADIENT_ACCUMULATION_STEPS = 8
-LABELS = ["style", "docs", "test", "build", "cicd", "fix", "feat", "refactor"]
 
-if INPUT_VARIANT not in {"summary_only", "diff_only", "both"}:
-    raise ValueError("INPUT_VARIANT must be summary_only, diff_only, or both.")
+LABELS = [
+    "style", "docs", "test", "build",
+    "cicd", "fix", "feat", "refactor",
+]
+
+OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+
 if not torch.cuda.is_available():
-    raise RuntimeError("Enable a Kaggle GPU before loading the quantized model.")
-
-if DATA_DIR is None:
-    candidates = sorted({
-        path.parent
-        for path in Path("/kaggle/input").rglob("train.json")
-        if (path.parent / "test.json").is_file()
-    })
-    if len(candidates) != 1:
-        raise RuntimeError(
-            "Set DATA_DIR to the intended folder containing the HQCM train.json and test.json."
-        )
-    DATA_DIR = candidates[0]
-else:
-    DATA_DIR = Path(DATA_DIR)
+    raise RuntimeError("Hãy bật GPU trong Kaggle trước khi chạy.")
 
 TRAIN_PATH = DATA_DIR / "train.json"
 if not TRAIN_PATH.is_file():
-    raise FileNotFoundError(f"Raw train.json not found: {TRAIN_PATH}")
-with TRAIN_PATH.open(encoding="utf-8") as file:
-    raw_rows = json.load(file)
+    raise FileNotFoundError(f"Không tìm thấy {TRAIN_PATH}")
+
+with TRAIN_PATH.open(encoding="utf-8") as f:
+    raw_rows = json.load(f)
+
 if len(raw_rows) != 4611:
-    raise ValueError(f"Expected 4,611 official training rows; found {len(raw_rows)}.")
+    raise ValueError(f"Expected 4611 rows, found {len(raw_rows)}")
+
 if any(row.get("type") not in LABELS for row in raw_rows):
-    raise ValueError("The training data contains labels outside the fixed eight-label set.")
+    raise ValueError("Dataset chứa nhãn không hợp lệ.")
+
 if any(not row.get("summaries", {}).get("en") for row in raw_rows):
-    raise ValueError("Every training row must have a non-empty summaries.en value.")
+    raise ValueError("Có mẫu thiếu summaries.en.")
 
-RUN_NAME = f"c2_{INPUT_VARIANT}_seed{TRAIN_SEED}"
-OUTPUT_DIR = OUTPUT_ROOT / RUN_NAME
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-set_seed(TRAIN_SEED)
-random.seed(TRAIN_SEED)
-np.random.seed(TRAIN_SEED)
+# ============================================================
+# PIN MODEL REVISION ONCE FOR ALL EXPERIMENTS
+# ============================================================
+print("Resolving model revision...")
 
-def build_prompt(row):
-    instruction = (
-        "Classify this commit into exactly one label: "
-        "style, docs, test, build, cicd, fix, feat, refactor.\n"
-    )
-    if INPUT_VARIANT == "summary_only":
-        return instruction + f"Commit message:\n{row['summaries']['en']}\nType:"
-    if INPUT_VARIANT == "diff_only":
-        return instruction + f"Diff:\n{row['change']}\nType:"
-    return (
-        instruction
-        + f"Diff:\n{row['change']}\n"
-        + f"Commit message:\n{row['summaries']['en']}\nType:"
-    )
+model_info = HfApi().model_info(
+    repo_id=MODEL_ID,
+    revision="main",
+)
+MODEL_REVISION = model_info.sha
 
+if not MODEL_REVISION:
+    raise RuntimeError("Không lấy được model commit SHA.")
+
+print("Model:", MODEL_ID)
+print("Pinned revision:", MODEL_REVISION)
+
+# ============================================================
+# FIXED DATA SPLIT FOR ALL THREE EXPERIMENTS
+# ============================================================
 train_indices, validation_indices = train_test_split(
     np.arange(len(raw_rows)),
     test_size=VALIDATION_FRACTION,
     random_state=SPLIT_SEED,
     stratify=[row["type"] for row in raw_rows],
 )
-train_rows = [raw_rows[index] for index in train_indices]
-validation_rows = [raw_rows[index] for index in validation_indices]
-print(f"Dataset: {DATA_DIR}")
+
+train_rows = [raw_rows[i] for i in train_indices]
+validation_rows = [raw_rows[i] for i in validation_indices]
+
 print(
-    f"Variant: {INPUT_VARIANT} | train={len(train_rows)} | "
+    f"Train={len(train_rows)}, "
     f"validation={len(validation_rows)}"
 )
 
-model_kwargs = {"trust_remote_code": False}
-if MODEL_REVISION:
-    model_kwargs["revision"] = MODEL_REVISION
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, **model_kwargs)
-resolved_revision = tokenizer.init_kwargs.get("_commit_hash")
-if not resolved_revision:
-    raise RuntimeError(
-        "Could not resolve the model revision. Set MODEL_REVISION to a pinned commit SHA."
+# Save split once so every experiment uses exactly the same samples.
+split_path = OUTPUT_ROOT / "split_indices.json"
+with split_path.open("w", encoding="utf-8") as f:
+    json.dump({
+        "split_seed": SPLIT_SEED,
+        "train_indices": [int(i) for i in train_indices],
+        "validation_indices": [int(i) for i in validation_indices],
+    }, f, indent=2)
+
+dataset_hash = hashlib.sha256(TRAIN_PATH.read_bytes()).hexdigest()
+
+# ============================================================
+# PROMPT
+# ============================================================
+def build_prompt(row, variant):
+    instruction = (
+        "Classify this commit into exactly one label: "
+        "style, docs, test, build, cicd, fix, feat, refactor.\n"
     )
-print("Resolved model revision:", resolved_revision)
-if tokenizer.pad_token_id is None:
-    tokenizer.pad_token = tokenizer.eos_token
-tokenizer.padding_side = "right"
+
+    if variant == "summary_only":
+        return (
+            instruction
+            + f"Commit message:\n{row['summaries']['en']}\nType:"
+        )
+
+    if variant == "diff_only":
+        return instruction + f"Diff:\n{row['change']}\nType:"
+
+    if variant == "both":
+        return (
+            instruction
+            + f"Diff:\n{row['change']}\n"
+            + f"Commit message:\n{row['summaries']['en']}\nType:"
+        )
+
+    raise ValueError(f"Unknown variant: {variant}")
 
 
-def encode_example(row):
-    prompt_ids = tokenizer(
-        build_prompt(row),
-        add_special_tokens=True,
-        truncation=False,
-    )["input_ids"]
-    answer_ids = tokenizer(
-        " " + row["type"],
-        add_special_tokens=False,
-    )["input_ids"]
-    if tokenizer.eos_token_id is not None:
-        answer_ids.append(tokenizer.eos_token_id)
-    answer_ids = answer_ids[:MAX_LENGTH]
-    prompt_budget = MAX_LENGTH - len(answer_ids)
-    prompt_ids = prompt_ids[-prompt_budget:] if prompt_budget > 0 else []
-    input_ids = prompt_ids + answer_ids
-    labels = [-100] * len(prompt_ids) + answer_ids
-    return {
-        "input_ids": input_ids,
-        "attention_mask": [1] * len(input_ids),
-        "labels": labels,
-    }
-
-train_dataset = Dataset.from_list(train_rows)
-train_dataset = train_dataset.map(
-    encode_example,
-    remove_columns=train_dataset.column_names,
-    desc="Tokenizing training split",
-)
-train_dataset = train_dataset.filter(
-    lambda row: any(label != -100 for label in row["labels"]),
-    desc="Dropping rows without target tokens",
-)
-data_collator = DataCollatorForSeq2Seq(
-    tokenizer,
-    label_pad_token_id=-100,
-    pad_to_multiple_of=8,
-    return_tensors="pt",
-)
-
-quantization_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_compute_dtype=torch.float16,
-)
-base_model = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID,
-    revision=resolved_revision,
-    quantization_config=quantization_config,
-    device_map="auto",
-    torch_dtype=torch.float16,
-)
-base_model.config.use_cache = False
-base_model = prepare_model_for_kbit_training(base_model)
-lora_config = LoraConfig(
-    r=LORA_RANK,
-    lora_alpha=LORA_ALPHA,
-    lora_dropout=0.05,
-    bias="none",
-    task_type=TaskType.CAUSAL_LM,
-    target_modules=[
-        "q_proj", "k_proj", "v_proj", "o_proj",
-        "gate_proj", "up_proj", "down_proj",
-    ],
-)
-model = get_peft_model(base_model, lora_config)
-model.print_trainable_parameters()
-
-training_args = TrainingArguments(
-    output_dir=str(OUTPUT_DIR / "trainer"),
-    num_train_epochs=NUM_EPOCHS,
-    per_device_train_batch_size=MICRO_BATCH_SIZE,
-    gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
-    learning_rate=LEARNING_RATE,
-    fp16=True,
-    bf16=False,
-    logging_steps=25,
-    save_strategy="epoch",
-    save_total_limit=1,
-    optim="paged_adamw_8bit",
-    max_grad_norm=0.3,
-    gradient_checkpointing=True,
-    warmup_ratio=0.03,
-    lr_scheduler_type="cosine",
-    report_to="none",
-    seed=TRAIN_SEED,
-    data_seed=SPLIT_SEED,
-    remove_unused_columns=False,
-)
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=train_dataset,
-    data_collator=data_collator,
-)
-torch.cuda.reset_peak_memory_stats()
-train_started = time.perf_counter()
-train_result = trainer.train()
-train_seconds = time.perf_counter() - train_started
-peak_gpu_memory_gb = torch.cuda.max_memory_reserved() / (1024 ** 3)
-adapter_output = OUTPUT_DIR / "adapter"
-trainer.save_model(str(adapter_output))
-tokenizer.save_pretrained(str(adapter_output))
-model.config.use_cache = True
-model.eval()
-input_device = model.get_input_embeddings().weight.device
-
-label_token_ids = {
-    label: tokenizer(" " + label, add_special_tokens=False)["input_ids"]
-    + ([tokenizer.eos_token_id] if tokenizer.eos_token_id is not None else [])
-    for label in LABELS
-}
-
-
-def score_prompt(prompt):
+# ============================================================
+# EVALUATION
+# ============================================================
+def score_prompt(model, tokenizer, prompt, label_token_ids):
     prompt_ids = tokenizer(
         prompt,
         add_special_tokens=True,
         truncation=True,
         max_length=MAX_LENGTH,
     )["input_ids"]
-    sequences = [prompt_ids + label_token_ids[label] for label in LABELS]
-    padded_length = max(len(sequence) for sequence in sequences)
+
+    sequences = [
+        prompt_ids + label_token_ids[label]
+        for label in LABELS
+    ]
+
+    padded_length = max(map(len, sequences))
     input_ids = torch.full(
         (len(sequences), padded_length),
         tokenizer.pad_token_id,
         dtype=torch.long,
     )
     attention_mask = torch.zeros_like(input_ids)
-    for row_index, sequence in enumerate(sequences):
-        input_ids[row_index, :len(sequence)] = torch.tensor(sequence)
-        attention_mask[row_index, :len(sequence)] = 1
-    input_ids = input_ids.to(input_device)
-    attention_mask = attention_mask.to(input_device)
+
+    for i, seq in enumerate(sequences):
+        input_ids[i, :len(seq)] = torch.tensor(seq)
+        attention_mask[i, :len(seq)] = 1
+
+    device = model.get_input_embeddings().weight.device
+    input_ids = input_ids.to(device)
+    attention_mask = attention_mask.to(device)
 
     with torch.inference_mode():
         logits = model(
@@ -291,120 +214,386 @@ def score_prompt(prompt):
             attention_mask=attention_mask,
             use_cache=False,
         ).logits.float()
-        log_probabilities = torch.log_softmax(logits, dim=-1)
+
+        log_probs = torch.log_softmax(logits, dim=-1)
 
     scores = []
     prompt_length = len(prompt_ids)
-    for row_index, label in enumerate(LABELS):
+
+    for i, label in enumerate(LABELS):
         target_ids = label_token_ids[label]
+
         positions = torch.arange(
             prompt_length - 1,
             prompt_length + len(target_ids) - 1,
-            device=input_device,
+            device=device,
         )
-        targets = torch.tensor(target_ids, dtype=torch.long, device=input_device)
-        scores.append(log_probabilities[row_index, positions, targets].sum())
+        targets = torch.tensor(target_ids, device=device)
+
+        scores.append(
+            log_probs[i, positions, targets].sum()
+        )
+
     return torch.stack(scores).cpu()
 
 
-gold_labels = [row["type"] for row in validation_rows]
-predictions = []
-probabilities = []
-prompt_lengths = []
-for index, row in enumerate(validation_rows, start=1):
-    prompt = build_prompt(row)
-    prompt_lengths.append(len(tokenizer(
-        prompt,
-        add_special_tokens=True,
-        truncation=False,
-    )["input_ids"]))
-    scores = score_prompt(prompt)
-    class_probabilities = torch.softmax(scores, dim=0).numpy()
-    predictions.append(LABELS[int(class_probabilities.argmax())])
-    probabilities.append(class_probabilities)
-    if index % 50 == 0 or index == len(validation_rows):
-        print(f"Scored validation {index}/{len(validation_rows)}")
+# ============================================================
+# RUN ONE EXPERIMENT
+# ============================================================
+def run_experiment(variant):
+    run_name = f"c2_{variant}_seed{TRAIN_SEED}"
+    output_dir = OUTPUT_ROOT / run_name
+    metrics_path = output_dir / "metrics.json"
 
-probabilities = np.asarray(probabilities, dtype=np.float64)
-confidence = probabilities.max(axis=1)
-correct = np.asarray(predictions) == np.asarray(gold_labels)
-bin_edges = np.linspace(0.0, 1.0, 11)
-ece = 0.0
-for bin_index in range(10):
-    lower, upper = bin_edges[bin_index], bin_edges[bin_index + 1]
-    in_bin = (
-        (confidence >= lower) & (confidence <= upper)
-        if bin_index == 9
-        else (confidence >= lower) & (confidence < upper)
+    # Skip only when previous run has a saved result.
+    if metrics_path.is_file():
+        try:
+            previous = json.loads(
+                metrics_path.read_text(encoding="utf-8")
+            )
+            if (
+                previous.get("model_revision") == MODEL_REVISION
+                and previous.get("dataset_train_sha256") == dataset_hash
+                and previous.get("input_variant") == variant
+            ):
+                print(f"\nAlready completed: {variant}; skipping.")
+                return previous
+        except (ValueError, OSError):
+            pass
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("\n" + "=" * 70)
+    print(f"STARTING EXPERIMENT: {variant}")
+    print("=" * 70)
+
+    set_seed(TRAIN_SEED)
+    random.seed(TRAIN_SEED)
+    np.random.seed(TRAIN_SEED)
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODEL_ID,
+        revision=MODEL_REVISION,
+        trust_remote_code=False,
     )
-    if in_bin.any():
-        ece += in_bin.mean() * abs(correct[in_bin].mean() - confidence[in_bin].mean())
 
-metrics = {
-    "experiment": "C2_input_ablation",
-    "input_variant": INPUT_VARIANT,
-    "model_id": MODEL_ID,
-    "model_revision": resolved_revision,
-    "seed": TRAIN_SEED,
-    "split_seed": SPLIT_SEED,
-    "train_samples": len(train_rows),
-    "validation_samples": len(validation_rows),
-    "max_length": MAX_LENGTH,
-    "mean_prompt_tokens_before_truncation": float(np.mean(prompt_lengths)),
-    "median_prompt_tokens_before_truncation": float(np.median(prompt_lengths)),
-    "train_seconds": train_seconds,
-    "peak_gpu_memory_reserved_gb": peak_gpu_memory_gb,
-    "train_loss": float(train_result.training_loss),
-    "accuracy": float(accuracy_score(gold_labels, predictions)),
-    "macro_f1_8": float(f1_score(
-        gold_labels, predictions, labels=LABELS, average="macro", zero_division=0
-    )),
-    "ece_10_bins_raw": float(ece),
-    "ece_note": "Exploratory, uncalibrated softmax over eight label log-likelihoods.",
-    "invalid_count": 0,
-    "inference": "Constrained to the fixed eight-label set using summed label-plus-EOS log-likelihood.",
-}
-print(classification_report(
-    gold_labels,
-    predictions,
-    labels=LABELS,
-    target_names=LABELS,
-    zero_division=0,
-    digits=4,
-))
-print(json.dumps(metrics, ensure_ascii=False, indent=2))
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right"
 
-prediction_frame = pd.DataFrame({
-    "sample_id": [f"train:{index}" for index in validation_indices],
-    "gold_label": gold_labels,
-    "predicted_label": predictions,
-    "confidence": confidence,
-})
-prediction_frame.to_csv(OUTPUT_DIR / "validation_predictions.csv", index=False)
-with (OUTPUT_DIR / "metrics.json").open("w", encoding="utf-8") as file:
-    json.dump(metrics, file, ensure_ascii=False, indent=2)
-with (OUTPUT_DIR / "split_indices.json").open("w", encoding="utf-8") as file:
-    json.dump({
+    def encode_example(row):
+        prompt_ids = tokenizer(
+            build_prompt(row, variant),
+            add_special_tokens=True,
+            truncation=False,
+        )["input_ids"]
+
+        answer_ids = tokenizer(
+            " " + row["type"],
+            add_special_tokens=False,
+        )["input_ids"]
+
+        if tokenizer.eos_token_id is not None:
+            answer_ids.append(tokenizer.eos_token_id)
+
+        answer_ids = answer_ids[:MAX_LENGTH]
+        prompt_budget = MAX_LENGTH - len(answer_ids)
+        prompt_ids = (
+            prompt_ids[-prompt_budget:]
+            if prompt_budget > 0 else []
+        )
+
+        input_ids = prompt_ids + answer_ids
+        labels = [-100] * len(prompt_ids) + answer_ids
+
+        return {
+            "input_ids": input_ids,
+            "attention_mask": [1] * len(input_ids),
+            "labels": labels,
+        }
+
+    train_dataset = Dataset.from_list(train_rows)
+    train_dataset = train_dataset.map(
+        encode_example,
+        remove_columns=train_dataset.column_names,
+        desc=f"Tokenizing {variant}",
+    )
+
+    train_dataset = train_dataset.filter(
+        lambda row: any(x != -100 for x in row["labels"]),
+        desc="Checking target labels",
+    )
+
+    data_collator = DataCollatorForSeq2Seq(
+        tokenizer,
+        label_pad_token_id=-100,
+        pad_to_multiple_of=8,
+        return_tensors="pt",
+    )
+
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_compute_dtype=torch.float16,
+    )
+
+    base_model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        revision=MODEL_REVISION,
+        quantization_config=quantization_config,
+        device_map="auto",
+        torch_dtype=torch.float16,
+    )
+
+    base_model.config.use_cache = False
+    base_model = prepare_model_for_kbit_training(base_model)
+
+    lora_config = LoraConfig(
+        r=LORA_RANK,
+        lora_alpha=LORA_ALPHA,
+        lora_dropout=0.05,
+        bias="none",
+        task_type=TaskType.CAUSAL_LM,
+        target_modules=[
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        ],
+    )
+
+    model = get_peft_model(base_model, lora_config)
+    model.print_trainable_parameters()
+
+    training_args = TrainingArguments(
+        output_dir=str(output_dir / "trainer"),
+        num_train_epochs=NUM_EPOCHS,
+        per_device_train_batch_size=MICRO_BATCH_SIZE,
+        gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
+        learning_rate=LEARNING_RATE,
+        fp16=True,
+        bf16=False,
+        logging_steps=25,
+        save_strategy="epoch",
+        save_total_limit=1,
+        optim="paged_adamw_8bit",
+        max_grad_norm=0.3,
+        gradient_checkpointing=True,
+        warmup_ratio=0.03,
+        lr_scheduler_type="cosine",
+        report_to="none",
+        seed=TRAIN_SEED,
+        # Do not pass data_seed here: older Accelerate versions
+        # may reject it. The data split above remains fixed.
+        remove_unused_columns=False,
+    )
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        data_collator=data_collator,
+    )
+
+    torch.cuda.reset_peak_memory_stats()
+    train_started = time.perf_counter()
+    train_result = trainer.train()
+    train_seconds = time.perf_counter() - train_started
+    peak_gpu_memory_gb = (
+        torch.cuda.max_memory_reserved() / (1024 ** 3)
+    )
+
+    adapter_dir = output_dir / "adapter"
+    trainer.save_model(str(adapter_dir))
+    tokenizer.save_pretrained(str(adapter_dir))
+
+    model.config.use_cache = True
+    model.eval()
+
+    label_token_ids = {
+        label: tokenizer(
+            " " + label,
+            add_special_tokens=False,
+        )["input_ids"]
+        + (
+            [tokenizer.eos_token_id]
+            if tokenizer.eos_token_id is not None else []
+        )
+        for label in LABELS
+    }
+
+    gold_labels = [row["type"] for row in validation_rows]
+    predictions = []
+    probabilities = []
+    prompt_lengths = []
+
+    for index, row in enumerate(validation_rows, start=1):
+        prompt = build_prompt(row, variant)
+
+        prompt_lengths.append(len(tokenizer(
+            prompt,
+            add_special_tokens=True,
+            truncation=False,
+        )["input_ids"]))
+
+        scores = score_prompt(
+            model, tokenizer, prompt, label_token_ids
+        )
+        class_probabilities = torch.softmax(
+            scores, dim=0
+        ).numpy()
+
+        predictions.append(
+            LABELS[int(class_probabilities.argmax())]
+        )
+        probabilities.append(class_probabilities)
+
+        if index % 50 == 0 or index == len(validation_rows):
+            print(
+                f"[{variant}] Scored "
+                f"{index}/{len(validation_rows)}"
+            )
+
+    probabilities = np.asarray(probabilities, dtype=np.float64)
+    confidence = probabilities.max(axis=1)
+    correct = np.asarray(predictions) == np.asarray(gold_labels)
+
+    bin_edges = np.linspace(0.0, 1.0, 11)
+    ece = 0.0
+
+    for bin_index in range(10):
+        lower, upper = bin_edges[bin_index:bin_index + 2]
+
+        if bin_index == 9:
+            in_bin = (
+                (confidence >= lower) & (confidence <= upper)
+            )
+        else:
+            in_bin = (
+                (confidence >= lower) & (confidence < upper)
+            )
+
+        if in_bin.any():
+            ece += in_bin.mean() * abs(
+                correct[in_bin].mean()
+                - confidence[in_bin].mean()
+            )
+
+    print(classification_report(
+        gold_labels,
+        predictions,
+        labels=LABELS,
+        target_names=LABELS,
+        zero_division=0,
+        digits=4,
+    ))
+
+    metrics = {
+        "experiment": "C2_input_ablation",
+        "input_variant": variant,
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+        "seed": TRAIN_SEED,
         "split_seed": SPLIT_SEED,
-        "train_indices": [int(index) for index in train_indices],
-        "validation_indices": [int(index) for index in validation_indices],
-    }, file, ensure_ascii=False)
+        "train_samples": len(train_rows),
+        "validation_samples": len(validation_rows),
+        "max_length": MAX_LENGTH,
+        "mean_prompt_tokens_before_truncation": float(
+            np.mean(prompt_lengths)
+        ),
+        "median_prompt_tokens_before_truncation": float(
+            np.median(prompt_lengths)
+        ),
+        "train_seconds": train_seconds,
+        "peak_gpu_memory_reserved_gb": peak_gpu_memory_gb,
+        "train_loss": float(train_result.training_loss),
+        "accuracy": float(
+            accuracy_score(gold_labels, predictions)
+        ),
+        "macro_f1_8": float(f1_score(
+            gold_labels,
+            predictions,
+            labels=LABELS,
+            average="macro",
+            zero_division=0,
+        )),
+        "ece_10_bins_raw": float(ece),
+        "invalid_count": 0,
+        "dataset_train_sha256": dataset_hash,
+    }
 
-manifest = {
-    **metrics,
-    "dataset_dir": str(DATA_DIR),
-    "dataset_train_sha256": hashlib.sha256(TRAIN_PATH.read_bytes()).hexdigest(),
-    "dtype": "float16",
-    "quantization": "4-bit NF4 with double quantization",
-    "lora_rank": LORA_RANK,
-    "lora_alpha": LORA_ALPHA,
-    "learning_rate": LEARNING_RATE,
-    "num_epochs": NUM_EPOCHS,
-    "validation_fraction": VALIDATION_FRACTION,
-}
-with (OUTPUT_DIR / "run_manifest.json").open("w", encoding="utf-8") as file:
-    json.dump(manifest, file, ensure_ascii=False, indent=2)
-print("Saved C2 artifacts to:", OUTPUT_DIR)
+    prediction_frame = pd.DataFrame({
+        "sample_id": [
+            f"train:{i}" for i in validation_indices
+        ],
+        "gold_label": gold_labels,
+        "predicted_label": predictions,
+        "confidence": confidence,
+    })
+    prediction_frame.to_csv(
+        output_dir / "validation_predictions.csv",
+        index=False,
+    )
+
+    with metrics_path.open("w", encoding="utf-8") as f:
+        json.dump(metrics, f, ensure_ascii=False, indent=2)
+
+    manifest = {
+        **metrics,
+        "dataset_dir": str(DATA_DIR),
+        "dtype": "float16",
+        "quantization": "4-bit NF4 with double quantization",
+        "lora_rank": LORA_RANK,
+        "lora_alpha": LORA_ALPHA,
+        "learning_rate": LEARNING_RATE,
+        "num_epochs": NUM_EPOCHS,
+    }
+
+    with (output_dir / "run_manifest.json").open(
+        "w", encoding="utf-8"
+    ) as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+
+    print(f"Completed: {variant}")
+    print(json.dumps(metrics, ensure_ascii=False, indent=2))
+
+    # Release GPU memory before loading the next model.
+    del trainer, model, base_model, tokenizer
+    del train_dataset, data_collator
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache()
+
+    return metrics
+
+
+# ============================================================
+# RUN ALL THREE SEQUENTIALLY
+# ============================================================
+all_results = []
+
+for variant in INPUT_VARIANTS:
+    try:
+        result = run_experiment(variant)
+        all_results.append(result)
+    except Exception as exc:
+        print(f"\nFAILED: {variant}: {type(exc).__name__}: {exc}")
+        print("Các thí nghiệm tiếp theo sẽ tiếp tục nếu môi trường còn hoạt động.")
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        continue
+
+if all_results:
+    summary = pd.DataFrame(all_results)
+    summary.to_csv(
+        OUTPUT_ROOT / "all_experiments_summary.csv",
+        index=False,
+    )
+    print("\nFINAL SUMMARY")
+    print(summary.to_string(index=False))
+
+print("\nOutput directory:", OUTPUT_ROOT)
 ```
 
 ## Đọc kết quả
