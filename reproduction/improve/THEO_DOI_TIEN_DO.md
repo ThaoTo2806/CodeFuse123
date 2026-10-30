@@ -59,7 +59,7 @@ Artifacts: [C5 summary CSV](hqcm_c5_seed_confirmation/hqcm_c5_seed_confirmation/
 1. **C4 pilot trên đầu vào `both`:** so sánh CE chuẩn với một phương pháp xử lý mất cân bằng (ưu tiên weighted CE theo tần suất lớp train) trên cùng split, model revision và seed. Đánh giá Macro-F1 cùng F1 `fix`/`refactor`; không đổi prompt hay scoring cùng lúc để biết thay đổi loss có tác dụng gì. Chỉ nhân thêm seed nếu run qua cổng chất lượng.
 2. **Sau khi khóa ứng viên:** chạy đánh giá test chính thức một lần, lưu predictions và so sánh paired với baseline reproduction/C3. Không chọn cấu hình bằng test.
 
-Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5 đã hoàn tất: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). Cập nhật kết quả C4 tiếp theo tại nhật ký bên dưới.
+Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5 đã hoàn tất: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). Bước chạy tiếp theo là [cell C4 weighted CE](KAGGLE_C4_WEIGHTED_CE.md): một cell lặp seed 0/1/2; baseline CE tương ứng đã có từ C2/C5. Sau khi chạy, gửi `all_experiments_summary.csv` và metrics/predictions để ghi kết quả vào nhật ký.
 
 ## Nhật ký kết quả
 
