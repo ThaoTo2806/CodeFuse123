@@ -74,10 +74,10 @@ Artifacts: [C4 summary CSV](hqcm_c4_weighted_ce/hqcm_c4_weighted_ce/all_experime
 ## Việc tiếp theo
 
 1. **Khóa ứng viên:** dùng CE chuẩn với đầu vào `both`; C5 cho thấy nhánh này cao hơn `diff_only` ở cả ba seed, còn weighted CE không cải thiện ổn định `fix`/`refactor`.
-2. **Đánh giá test chính thức:** chạy một lần cho cấu hình đã khóa, không dùng test để chọn/tinh chỉnh. Lưu predictions và metrics theo từng lớp; so sánh với baseline reproduction/C3 bằng cùng định nghĩa 8 nhãn và báo cáo rõ khác biệt backbone/protocol.
+2. **Đánh giá test chính thức:** dùng [cell final test](KAGGLE_FINAL_TEST_BOTH.md) để chấm cả ba adapter CE `both` seed 0/1/2 đã định trước trong cùng một lượt đánh giá. Không dùng test để chọn/tinh chỉnh seed. Lưu predictions và metrics theo từng lớp; báo cáo rõ khác biệt backbone/protocol khi đối chiếu Run 1/C3.
 3. Nếu vẫn còn thời gian sau đánh giá chính thức, có thể thử một phương án giảm mức trọng số (ví dụ căn bậc hai của nghịch tần suất) như thí nghiệm thăm dò riêng; không thay thế kết luận hiện tại và không mở thêm nhiều grid trên test.
 
-Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4 weighted CE đã chạy đủ seed: [cell và cấu hình](KAGGLE_C4_WEIGHTED_CE.md).
+Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4 weighted CE đã chạy đủ seed: [cell và cấu hình](KAGGLE_C4_WEIGHTED_CE.md). Bước hiện tại là [cell đánh giá test cuối cho CE `both`](KAGGLE_FINAL_TEST_BOTH.md): chấm ba adapter seed 0/1/2 đã chọn trước trên validation, không train lại và không chọn seed bằng test.
 
 ## Nhật ký kết quả
 
@@ -93,7 +93,7 @@ Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướn
 | 30/10/2026 | C5 diff-only       | Seeds 0/1/2; cùng split và revision              | Mean Acc 0,7626 ± 0,0127; Macro-F1 0,7927 ± 0,0055 | Validation; 3 seeds                             |
 | 30/10/2026 | C5 both            | Seeds 0/1/2; cùng split và revision              | Mean Acc 0,8009 ± 0,0156; Macro-F1 0,8475 ± 0,0149 | Tốt hơn diff-only ở cả ba seed                  |
 | 31/10/2026 | C4 weighted CE     | Đầu vào `both`; seeds 0/1/2; cùng split/revision | Mean Acc 0,7929 ± 0,0050; Macro-F1 0,8521 ± 0,0067 | Không chọn: F1 `fix`/`refactor` giảm trung bình |
-| Tiếp theo  | Test CE `both`     | Cấu hình CE chuẩn đã khóa; test chính thức       | Chờ chạy                                           | Chỉ đánh giá một lần, không chọn bằng test      |
+| Tiếp theo  | Test CE `both`     | Ba seed CE chuẩn đã khóa; test chính thức        | Chờ chạy                                           | Báo cáo đủ seed; không chọn bằng test           |
 
 ## Quy tắc ghi kết quả mới
 
