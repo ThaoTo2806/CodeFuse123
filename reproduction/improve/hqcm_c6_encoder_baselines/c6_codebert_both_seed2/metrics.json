@@ -1,0 +1,101 @@
+{
+  "experiment": "C6_encoder_baseline",
+  "run_name": "c6_codebert_both_seed2",
+  "model_key": "codebert",
+  "model_id": "microsoft/codebert-base",
+  "model_revision": "3b0952feddeffad0063f274080e3c23d75e7eb39",
+  "input_variant": "both",
+  "seed": 2,
+  "split_seed": 42,
+  "dataset_train_sha256": "a6430d65f194f5656b4704848d56c7e924bd99532ec78361b18c387a2f44c543",
+  "train_samples": 4149,
+  "validation_samples": 462,
+  "max_length": 512,
+  "truncation": "only_first for paired diff+summary; True for diff-only",
+  "num_train_epochs": 3,
+  "learning_rate": 2e-05,
+  "effective_batch_size": 16,
+  "train_loss": 2.188152851202549,
+  "train_seconds": 731.639322046,
+  "peak_gpu_memory_reserved_gb": 4.861328125,
+  "accuracy": 0.7121212121212122,
+  "macro_f1_8": 0.7011091951495217,
+  "macro_precision_8": 0.8026782441191458,
+  "macro_recall_8": 0.6696164430684555,
+  "weighted_f1_8": 0.7088415217335514,
+  "ece_10_bins_raw": 0.03667532804208402,
+  "ece_note": "Exploratory, uncalibrated softmax over encoder logits.",
+  "classification_report": {
+    "style": {
+      "precision": 0.75,
+      "recall": 0.3333333333333333,
+      "f1-score": 0.46153846153846156,
+      "support": 9.0
+    },
+    "docs": {
+      "precision": 1.0,
+      "recall": 0.7777777777777778,
+      "f1-score": 0.875,
+      "support": 36.0
+    },
+    "test": {
+      "precision": 0.8723404255319149,
+      "recall": 0.9111111111111111,
+      "f1-score": 0.8913043478260869,
+      "support": 45.0
+    },
+    "build": {
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1-score": 0.5,
+      "support": 9.0
+    },
+    "cicd": {
+      "precision": 0.8,
+      "recall": 0.8888888888888888,
+      "f1-score": 0.8421052631578947,
+      "support": 9.0
+    },
+    "fix": {
+      "precision": 0.6756756756756757,
+      "recall": 0.6302521008403361,
+      "f1-score": 0.6521739130434783,
+      "support": 119.0
+    },
+    "feat": {
+      "precision": 0.6323529411764706,
+      "recall": 0.8431372549019608,
+      "f1-score": 0.7226890756302521,
+      "support": 102.0
+    },
+    "refactor": {
+      "precision": 0.6910569105691057,
+      "recall": 0.6390977443609023,
+      "f1-score": 0.6640625,
+      "support": 133.0
+    },
+    "accuracy": 0.7121212121212122,
+    "macro avg": {
+      "precision": 0.8026782441191458,
+      "recall": 0.6696164430684555,
+      "f1-score": 0.7011091951495217,
+      "support": 462.0
+    },
+    "weighted avg": {
+      "precision": 0.7251543152814558,
+      "recall": 0.7121212121212122,
+      "f1-score": 0.7088415217335514,
+      "support": 462.0
+    }
+  },
+  "bootstrap_resamples": 2000,
+  "bootstrap_seed": 62002,
+  "accuracy_bootstrap_95ci": [
+    0.6688311688311688,
+    0.7510822510822511
+  ],
+  "macro_f1_8_bootstrap_95ci": [
+    0.6134683721099213,
+    0.7701654021062814
+  ]
+}
