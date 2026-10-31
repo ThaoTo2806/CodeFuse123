@@ -1,0 +1,96 @@
+{
+  "experiment": "locked_final_test_CE_both",
+  "input_variant": "both",
+  "loss": "standard_CE",
+  "model_id": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+  "model_revision": "2e1fd397ee46e1388853d2af2c993145b0f1098a",
+  "seed": 0,
+  "dataset_train_sha256": "a6430d65f194f5656b4704848d56c7e924bd99532ec78361b18c387a2f44c543",
+  "dataset_test_sha256": "c3c804de576b148772beb7ac82c0ed0e113056f05346d3e20831cecef43b78d2",
+  "train_samples": 4611,
+  "test_samples": 518,
+  "max_input_tokens_left_truncated": 512,
+  "inference_seconds": 362.455021315,
+  "accuracy": 0.8127413127413128,
+  "macro_f1_8": 0.8582586111211058,
+  "macro_precision_8": 0.8818511018982718,
+  "macro_recall_8": 0.8459266524727052,
+  "weighted_f1_8": 0.8129770352227085,
+  "ece_10_bins_raw": 0.09728295727125927,
+  "ece_note": "Exploratory, uncalibrated softmax over eight label log-likelihoods.",
+  "invalid_count": 0,
+  "invalid_note": "Constrained candidate scoring only permits the fixed eight labels.",
+  "classification_report": {
+    "style": {
+      "precision": 1.0,
+      "recall": 0.6363636363636364,
+      "f1-score": 0.7777777777777778,
+      "support": 11.0
+    },
+    "docs": {
+      "precision": 0.8918918918918919,
+      "recall": 0.825,
+      "f1-score": 0.8571428571428571,
+      "support": 40.0
+    },
+    "test": {
+      "precision": 0.8679245283018868,
+      "recall": 0.92,
+      "f1-score": 0.8932038834951457,
+      "support": 50.0
+    },
+    "build": {
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1-score": 0.9565217391304348,
+      "support": 11.0
+    },
+    "cicd": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "fix": {
+      "precision": 0.7285714285714285,
+      "recall": 0.7669172932330827,
+      "f1-score": 0.7472527472527473,
+      "support": 133.0
+    },
+    "feat": {
+      "precision": 0.8727272727272727,
+      "recall": 0.8421052631578947,
+      "f1-score": 0.8571428571428571,
+      "support": 114.0
+    },
+    "refactor": {
+      "precision": 0.777027027027027,
+      "recall": 0.777027027027027,
+      "f1-score": 0.777027027027027,
+      "support": 148.0
+    },
+    "accuracy": 0.8127413127413128,
+    "macro avg": {
+      "precision": 0.8818511018982718,
+      "recall": 0.8459266524727052,
+      "f1-score": 0.8582586111211058,
+      "support": 518.0
+    },
+    "weighted avg": {
+      "precision": 0.8157261477123792,
+      "recall": 0.8127413127413128,
+      "f1-score": 0.8129770352227085,
+      "support": 518.0
+    }
+  },
+  "bootstrap_resamples": 2000,
+  "bootstrap_seed": 51031,
+  "accuracy_bootstrap_95ci": [
+    0.777992277992278,
+    0.8456081081081078
+  ],
+  "macro_f1_8_bootstrap_95ci": [
+    0.8131574377473013,
+    0.8926310179630595
+  ]
+}

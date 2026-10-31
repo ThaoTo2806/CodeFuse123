@@ -93,6 +93,24 @@ for seed, adapter_dir in ADAPTER_DIRS.items():
         )
     if not (adapter_dir / "adapter_model.safetensors").is_file():
         raise FileNotFoundError(f"Adapter weights not found under {adapter_dir}.")
+    metrics_path = adapter_dir.parent / "metrics.json"
+    if not metrics_path.is_file():
+        raise FileNotFoundError(
+            f"Run metrics not found beside seed {seed} adapter: {metrics_path}. "
+            "Keep metrics.json beside the adapter so its experiment provenance can be checked."
+        )
+    with metrics_path.open(encoding="utf-8") as file:
+        adapter_metrics = json.load(file)
+    if (
+        adapter_metrics.get("input_variant") != "both"
+        or adapter_metrics.get("seed") != seed
+        or adapter_metrics.get("model_revision") != MODEL_REVISION
+        or adapter_metrics.get("dataset_train_sha256") != EXPECTED_TRAIN_SHA256
+    ):
+        raise ValueError(
+            f"Adapter provenance mismatch for seed {seed}: {metrics_path}. "
+            "Expected input_variant='both', matching seed, pinned revision, and train SHA-256."
+        )
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 test_sha256 = hashlib.sha256(test_path.read_bytes()).hexdigest()

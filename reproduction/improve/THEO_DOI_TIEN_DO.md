@@ -4,7 +4,7 @@ Tài liệu này là nơi ghi trạng thái và kết quả chính. Mỗi kết 
 
 ## Đọc nhanh
 
-Bài toán đang làm là **phân loại loại commit** thành 8 nhãn (`style`, `docs`, `test`, `build`, `cicd`, `fix`, `feat`, `refactor`). Dữ liệu HQCM có sẵn diff (`change`), commit message (`summaries.en`) và nhãn (`type`). Ta đang kiểm tra xem bỏ template dài hay bỏ bớt một nguồn thông tin có giúp phân loại tốt hơn không.
+4. Sau đó tổng hợp ba seed CE `both` chỉ từ seed 0, seed 1 và seed 2 đã xác minh đúng adapter. Đối chiếu với Run 1/C3 nhưng nêu rõ backbone và protocol khác nhau; không dùng test để tinh chỉnh.
 
 ## Đã làm
 
@@ -12,26 +12,26 @@ Bài toán đang làm là **phân loại loại commit** thành 8 nhãn (`style`
 2. **Kiểm tra dữ liệu:** 4.611 mẫu train, 518 test chính thức; message tiếng Anh ngắn (trung vị 6 từ). Khoảng 7–8% diff vượt 512 token. Bộ 100 mẫu hỗ trợ gán nhãn thủ công đã được tạo, nhưng việc gán nhãn và tổng hợp của con người chưa hoàn tất.
 3. **C3, dự đoán trong tập 8 nhãn:** dùng adapter Run 1 và chấm log-likelihood thay vì sinh tự do. Trên test: Accuracy 0,7799, Macro-F1 0,8384, invalid 0/518, ECE thô 0,1948. Chất lượng gần Run 1; invalid bằng 0 là do cách chấm chỉ cho phép 8 nhãn. ECE chưa hiệu chỉnh.
 4. **C1, prompt dài so với compact:** cùng Qwen2.5-Coder-1.5B-Instruct, seed 0, split validation 4.149/462, hai epoch. Kết quả compact tốt hơn trong lần chạy này:
-
-| Chỉ số validation           |    Original |     Compact |
-| :-------------------------- | ----------: | ----------: |
-| Accuracy                    |      0,3052 |      0,7900 |
-| Macro-F1 (8 nhãn)           |      0,2611 |      0,8560 |
-| ECE thô                     |      0,4032 |      0,0820 |
-| Prompt trung bình trước cắt | 603,7 token | 304,7 token |
-| Thời gian train             |  5.374 giây |  4.575 giây |
-
-Đây là pilot một seed, không khẳng định template dài là nguyên nhân duy nhất. Xem [kế hoạch và nhận xét C1](README_HUONG_B_CHCL.md), [metrics original](hqcm_c1_prompt_ablation/hqcm_c1_prompt_ablation/c1_original_seed0/metrics.json) và [metrics compact](hqcm_c1_prompt_compact_ablation/hqcm_c1_prompt_compact_ablation/c1_compact_seed0/metrics.json).
-
-## Kết quả C2: input ablation
-
-Đã hoàn tất ngày 30/10/2026 trên validation: Qwen2.5-Coder-1.5B-Instruct, revision `2e1fd397ee46e1388853d2af2c993145b0f1098a`, seed 0, split seed 42, train/validation 4.149/462, cùng hash dữ liệu train. Ba nhánh dùng chung cấu hình QLoRA 4-bit, hai epoch và cách chấm điểm tập đóng tám nhãn.
-
-| Đầu vào        |   Accuracy | Macro-F1 (8 nhãn) |   F1 `fix` |  F1 `feat` | F1 `refactor` |    ECE thô | Prompt trung bình |      Train | VRAM đỉnh |
-| :------------- | ---------: | ----------------: | ---------: | ---------: | ------------: | ---------: | ----------------: | ---------: | --------: |
-| Summary-only   |     0,6753 |            0,7390 |     0,6186 |     0,6730 |        0,6985 |     0,0967 |        39,9 token | 4.322 giây |   2,14 GB |
-| Diff-only      |     0,7532 |            0,7957 |     0,7013 |     0,7596 |        0,7076 |     0,1195 |       292,8 token | 4.764 giây |   6,00 GB |
-| Diff + summary | **0,7879** |        **0,8314** | **0,7500** | **0,8100** |    **0,7399** | **0,0935** |       304,7 token | 4.839 giây |   7,25 GB |
+   | Seed | Adapter CE `both` | Accuracy | Macro-F1 (8 nhãn) | Macro-P/R | Weighted-F1 | ECE thô |
+   | --: | :-- | --: | --: | --: | --: | --: |
+   | 0 | `c2_both_seed0` | 0,8127 | 0,8583 | 0,8819 / 0,8459 | 0,8130 | 0,0973 |
+   | 1 | `c5_both_seed1` | 0,8031 | 0,8629 | 0,8688 / 0,8601 | 0,8039 | 0,0886 |
+   | 2 | `c5_both_seed2` | 0,7857 | 0,8572 | 0,8693 / 0,8494 | 0,7868 | 0,0921 |
+   | ECE thô | 0,4032 | 0,0820 |
+   | Prompt trung bình trước cắt | 603,7 token | 304,7 token |
+   | Thời gian train | 5.374 giây | 4.575 giây |
+   Đã đánh giá test chính thức 518 mẫu với Qwen2.5-Coder-1.5B-Instruct, standard CE, input `both`, revision `2e1fd397...b0f1098a`. Dataset hashes khớp: train `a6430d65...f44c543`, test `c3c804de...f43b78d2`. Seed 0/1/2 hiện đều dùng adapter `both` tương ứng.
+   Đây là pilot một seed, không khẳng định template dài là nguyên nhân duy nhất. Xem [kế hoạch và nhận xét C1](README_HUONG_B_CHCL.md), [metrics original](hqcm_c1_prompt_ablation/hqcm_c1_prompt_ablation/c1_original_seed0/metrics.json) và [metrics compact](hqcm_c1_prompt_compact_ablation/hqcm_c1_prompt_compact_ablation/c1_compact_seed0/metrics.json).
+   | Seed | Adapter CE `both` | Accuracy | Macro-F1 (8 nhãn) | Macro-P/R | Weighted-F1 | ECE thô |
+   | --: | :-- | --: | --: | :-- | --: | --: |
+   | 0 | `c2_both_seed0` | 0,8127 | 0,8583 | 0,8819 / 0,8459 | 0,8130 | 0,0973 |
+   | 1 | `c5_both_seed1` | 0,8031 | 0,8629 | 0,8688 / 0,8601 | 0,8039 | 0,0886 |
+   | 2 | `c5_both_seed2` | 0,7857 | 0,8572 | 0,8693 / 0,8494 | 0,7868 | 0,0921 |
+   | Đầu vào | Accuracy | Macro-F1 (8 nhãn) | F1 `fix` | F1 `feat` | F1 `refactor` | ECE thô | Prompt trung bình | Train | VRAM đỉnh |
+   | :------------- | ---------: | ----------------: | ---------: | ---------: | ------------: | ---------: | ----------------: | ---------: | --------: |
+   | Summary-only | 0,6753 | 0,7390 | 0,6186 | 0,6730 | 0,6985 | 0,0967 | 39,9 token | 4.322 giây | 2,14 GB |
+   Ở seed 0/1, F1 `fix` lần lượt 0,7473/0,7579 và F1 `refactor` 0,7770/0,7517. Các số test này không chứng minh cải thiện hơn baseline paper: backbone và protocol khác Run 1/C3. `invalid_count = 0` do constrained scoring chỉ xét 8 nhãn; ECE là thô, chưa calibration. Do đã xem test metrics, việc chấm lại đúng adapter seed 2 phải được ghi minh bạch là sửa lỗi adapter đã định trước, không phải lựa chọn/tinh chỉnh theo test.
+   | Diff + summary | **0,7879** | **0,8314** | **0,7500** | **0,8100** | **0,7399** | **0,0935** | 304,7 token | 4.839 giây | 7,25 GB |
 
 **Nhận xét:** Trong lần chạy này, dùng cả diff và message đứng đầu; so với chỉ diff, tăng 0,0346 Accuracy và 0,0357 Macro-F1 (khoảng 3,5 điểm phần trăm). Diff-only tốt hơn summary-only 0,0567 Macro-F1, nên diff là nguồn quan trọng hơn trong ba cấu hình đã thử. Dùng cả hai cũng cho F1 cao nhất trong ba lớp lớn `fix`, `feat`, `refactor`. Lợi ích đi kèm thời gian train và VRAM cao hơn diff-only.
 
@@ -73,11 +73,27 @@ Artifacts: [C4 summary CSV](hqcm_c4_weighted_ce/hqcm_c4_weighted_ce/all_experime
 
 ## Việc tiếp theo
 
-1. **Khóa ứng viên:** dùng CE chuẩn với đầu vào `both`; C5 cho thấy nhánh này cao hơn `diff_only` ở cả ba seed, còn weighted CE không cải thiện ổn định `fix`/`refactor`.
-2. **Đánh giá test chính thức:** dùng [cell final test](KAGGLE_FINAL_TEST_BOTH.md) để chấm cả ba adapter CE `both` seed 0/1/2 đã định trước trong cùng một lượt đánh giá. Không dùng test để chọn/tinh chỉnh seed. Lưu predictions và metrics theo từng lớp; báo cáo rõ khác biệt backbone/protocol khi đối chiếu Run 1/C3.
-3. Nếu vẫn còn thời gian sau đánh giá chính thức, có thể thử một phương án giảm mức trọng số (ví dụ căn bậc hai của nghịch tần suất) như thí nghiệm thăm dò riêng; không thay thế kết luận hiện tại và không mở thêm nhiều grid trên test.
+1. **Hoàn tất báo cáo:** dùng kết quả ba seed CE `both` ở mục bên dưới; ghi rõ test đã bị chấm lần đầu bằng adapter diff-only ở seed 2, sau đó được chấm lại bằng adapter `both` đã khóa.
+2. Khi đối chiếu Run 1/C3 hoặc paper, nêu rõ backbone, scoring và protocol khác nhau. Không chọn/tinh chỉnh mô hình dựa trên test.
 
-Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4 weighted CE đã chạy đủ seed: [cell và cấu hình](KAGGLE_C4_WEIGHTED_CE.md). Bước hiện tại là [cell đánh giá test cuối cho CE `both`](KAGGLE_FINAL_TEST_BOTH.md): chấm ba adapter seed 0/1/2 đã chọn trước trên validation, không train lại và không chọn seed bằng test.
+Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4 weighted CE: [cell và cấu hình](KAGGLE_C4_WEIGHTED_CE.md). Final test: [cell và protocol](KAGGLE_FINAL_TEST_BOTH.md). Không chạy thêm test để chọn mô hình.
+
+## Kết quả test cuối: CE `both`, ba seed
+
+Đã đánh giá test chính thức 518 mẫu với Qwen2.5-Coder-1.5B-Instruct, standard CE, input `both`, revision `2e1fd397...b0f1098a`. Dataset hashes khớp: train `a6430d65...f44c543`, test `c3c804de...f43b78d2`. Lượt đầu seed 2 bị trỏ nhầm sang diff-only; sau đó đã chạy lại seed 2 bằng adapter CE `both` đã chọn trước trên validation. Bảng dưới dùng kết quả đúng cấu hình cho cả ba seed.
+
+|          Seed | Adapter CE `both`   |        Accuracy | Macro-F1 (8 nhãn) |                         Macro-P/R |     Weighted-F1 |         ECE thô |
+| ------------: | :------------------ | --------------: | ----------------: | --------------------------------: | --------------: | --------------: |
+|             0 | `c2_both_seed0`     |          0,8127 |            0,8583 |                   0,8819 / 0,8459 |          0,8130 |          0,0973 |
+|             1 | `c5_both_seed1`     |          0,8031 |            0,8629 |                   0,8688 / 0,8601 |          0,8039 |          0,0886 |
+|             2 | `c5_both_seed2`     |          0,7857 |            0,8572 |                   0,8693 / 0,8494 |          0,7868 |          0,0921 |
+| Mean ± SD mẫu | Ba seed đã xác minh | 0,8005 ± 0,0137 |   0,8595 ± 0,0031 | 0,8733 ± 0,0074 / 0,8518 ± 0,0074 | 0,8012 ± 0,0133 | 0,0927 ± 0,0044 |
+
+Macro-F1 từng seed nằm trong khoảng 0,8572–0,8629; SD giữa ba seed là 0,0031. F1 `fix` theo seed là 0,7473 / 0,7579 / 0,7305; F1 `refactor` là 0,7770 / 0,7517 / 0,7458. ECE trung bình là số thô chưa calibration. `invalid_count = 0` do constrained scoring chỉ xét tám nhãn.
+
+**Giới hạn protocol:** test đã bị chấm một lần bằng adapter diff-only ở seed 2 trước khi lỗi đường dẫn được phát hiện, sau đó mới chấm seed 2 bằng adapter `both` đã được xác định trước. Kết quả báo cáo dùng adapter đúng, nhưng phải công khai lần chạy nhầm này; đây không còn là một lần đánh giá test hoàn toàn mù. Không dùng test để thay đổi cấu hình. So sánh với Run 1/C3 cũng cần nêu khác biệt backbone và protocol; không diễn giải đây là kết luận vượt paper.
+
+Artifacts đã cập nhật: [final test summary CSV](hqcm_final_test_both/hqcm_final_test_both/all_seed_test_summary.csv), [seed 0 metrics](hqcm_final_test_both/hqcm_final_test_both/seed0_metrics.json), [seed 1 metrics](hqcm_final_test_both/hqcm_final_test_both/seed1_metrics.json), [seed 2 metrics đã sửa](hqcm_final_test_both/hqcm_final_test_both/seed2_metrics.json), [aggregate JSON đã sửa](hqcm_final_test_both/hqcm_final_test_both/all_seed_test_metrics.json). Mỗi run có test scores và confusion matrix trong cùng thư mục. Giữ log lần chạy nhầm kèm hồ sơ nghiên cứu để minh bạch.
 
 ## Nhật ký kết quả
 
@@ -93,7 +109,8 @@ Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướn
 | 30/10/2026 | C5 diff-only       | Seeds 0/1/2; cùng split và revision              | Mean Acc 0,7626 ± 0,0127; Macro-F1 0,7927 ± 0,0055 | Validation; 3 seeds                             |
 | 30/10/2026 | C5 both            | Seeds 0/1/2; cùng split và revision              | Mean Acc 0,8009 ± 0,0156; Macro-F1 0,8475 ± 0,0149 | Tốt hơn diff-only ở cả ba seed                  |
 | 31/10/2026 | C4 weighted CE     | Đầu vào `both`; seeds 0/1/2; cùng split/revision | Mean Acc 0,7929 ± 0,0050; Macro-F1 0,8521 ± 0,0067 | Không chọn: F1 `fix`/`refactor` giảm trung bình |
-| Tiếp theo  | Test CE `both`     | Ba seed CE chuẩn đã khóa; test chính thức        | Chờ chạy                                           | Báo cáo đủ seed; không chọn bằng test           |
+| 31/10/2026 | Test CE `both`     | Seeds 0/1/2; seed 2 đã chấm lại adapter đúng     | Mean Acc 0,8005 ± 0,0137; Macro-F1 0,8595 ± 0,0031 | Ba seed hợp lệ; ghi protocol deviation lần đầu  |
+| Tiếp theo  | Hoàn tất báo cáo   | Dùng aggregate đã sửa; không tune trên test      | Chờ tổng hợp                                       | Công khai lần đầu seed 2 dùng nhầm adapter      |
 
 ## Quy tắc ghi kết quả mới
 
