@@ -4,7 +4,7 @@ Tài liệu này là nơi ghi trạng thái và kết quả chính. Mỗi kết 
 
 ## Đọc nhanh
 
-Hướng hiện hành là CHCL. C2/C5/C4, final test CE `both` và C6 encoder đã chạy. Bước hiện tại là paired analysis trên validation predictions đã lưu: [cell Kaggle](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md); tiếp đó cần đánh giá ngoài HQCM/project và rà soát novelty.
+Hướng hiện hành là CHCL. C2/C5/C4, final test CE `both`, C6 encoder và paired validation analysis đã chạy. Còn đánh giá ngoài HQCM/project, related-work/novelty review và hoàn thiện báo cáo.
 
 ## Đã làm
 
@@ -90,13 +90,30 @@ C6 trả lời một phần RQ4 về baseline encoder trên cùng HQCM validatio
 
 Artifacts: [C6 summary CSV](hqcm_c6_encoder_baselines/all_experiments_summary.csv), cùng metrics/predictions/manifest từng run trong các thư mục `c6_*`. Cell: [KAGGLE_C6_ENCODER_BASELINES.md](KAGGLE_C6_ENCODER_BASELINES.md).
 
+## Kết quả paired validation: `both` so với `diff_only`
+
+Đã ghép validation predictions theo cùng 462 sample IDs cho từng model/seed. Không train lại và không đọc test. Các số sau là chênh lệch paired `both − diff_only`; SD là độ lệch chuẩn mẫu của ba chênh lệch seed.
+
+| Model              | Δ Accuracy mean ± SD | Δ Macro-F1 mean ± SD | Δ F1 `fix` mean | Δ F1 `refactor` mean | Seed `both` Macro-F1 cao hơn |
+| :----------------- | -------------------: | -------------------: | --------------: | -------------------: | :--------------------------: |
+| Qwen2.5-Coder-1.5B |     +0,0382 ± 0,0033 |     +0,0548 ± 0,0166 |         +0,0409 |              +0,0611 |             3/3              |
+| CodeBERT           |      0,0000 ± 0,0187 |     +0,0080 ± 0,0285 |         −0,0026 |              +0,0074 |             2/3              |
+| GraphCodeBERT      |     +0,0051 ± 0,0144 |     +0,0101 ± 0,0201 |         +0,0066 |              +0,0068 |             2/3              |
+
+**Nhận xét:** `both` cải thiện nhất quán trên Qwen: cả ba seed đều tăng Macro-F1, với mức tăng trung bình 5,48 điểm phần trăm. Paired bootstrap CI của Δ Macro-F1 theo từng seed chứa 0 ở seed 0, nhưng không chứa 0 ở seed 1/2. McNemar exact p lần lượt là 0,0805 / 0,0414 / 0,0183. Đây là các kiểm định riêng từng seed, chưa hiệu chỉnh cho nhiều phép so sánh; không nên diễn giải như một kiểm định tổng thể.
+
+Với CodeBERT và GraphCodeBERT, mức tăng trung bình nhỏ và không ổn định qua seed. CodeBERT tăng Macro-F1 ở 2/3 seed; GraphCodeBERT cũng 2/3. McNemar p-value theo seed, chưa hiệu chỉnh đa kiểm định: CodeBERT 0,4583 / 0,4244 / 0,0414; GraphCodeBERT 0,2005 / 0,3593 / 0,5572. Kết quả gợi ý lợi ích từ summary phụ thuộc backbone; không đủ để tuyên bố message luôn có ích hoặc có significance tổng quát.
+
+**Giới hạn:** paired bootstrap là hậu nghiệm trên một validation split, có điều kiện trên các model đã train; ba seed không phải 1.386 quan sát độc lập. Không có kiểm định tổng hợp qua seed, hiệu chỉnh đa kiểm định hay cross-project validation. Serialization Qwen và encoder cũng khác nhau.
+
+Artifacts: [paired summary CSV](hqcm_paired_validation_analysis/paired_results_summary.csv), [paired per-seed CSV](hqcm_paired_validation_analysis/paired_results_by_seed.csv), confusion matrices theo model/seed trong cùng thư mục. Cell: [KAGGLE_PAIRED_VALIDATION_ANALYSIS.md](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md).
+
 ## Việc tiếp theo
 
-1. **Chạy paired validation analysis:** [cell](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md) ghép predictions theo sample ID, tính paired bootstrap CI và McNemar cho `both` so với `diff_only` theo model/seed. Đây là phân tích hậu nghiệm validation, không dùng test và không chọn cấu hình.
-2. **Tăng bằng chứng ngoài HQCM:** tìm/chuẩn bị dataset hoặc project độc lập có nhãn tương thích để đánh giá cross-project; raw HQCM hiện không có repository ID để tự tạo split theo project.
-3. **Rà soát novelty và hoàn thiện manuscript:** đối chiếu related work về commit classification, input modalities, constrained scoring và code language models; công khai protocol deviation final test và khác biệt serialization/backbone khi so Qwen với encoder. Chưa khẳng định Q3 cho đến khi các bước này hoàn tất.
+1. **Tăng bằng chứng ngoài HQCM:** tìm/chuẩn bị dataset hoặc project độc lập có nhãn tương thích để đánh giá cross-project; raw HQCM hiện không có repository ID để tự tạo split theo project.
+2. **Rà soát novelty và hoàn thiện manuscript:** đối chiếu related work về commit classification, input modalities, constrained scoring và code language models; công khai protocol deviation final test và khác biệt serialization/backbone khi so Qwen với encoder. Chưa khẳng định Q3 cho đến khi các bước này hoàn tất.
 
-Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4: [weighted CE](KAGGLE_C4_WEIGHTED_CE.md). C6 encoder: [cell](KAGGLE_C6_ENCODER_BASELINES.md). Final test CE `both` đã hoàn tất. Bước kế tiếp chỉ phân tích validation predictions; không chạy thêm test để chọn mô hình.
+Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4: [weighted CE](KAGGLE_C4_WEIGHTED_CE.md). C6 encoder: [cell](KAGGLE_C6_ENCODER_BASELINES.md). Paired validation analysis đã hoàn tất; final test CE `both` cũng đã hoàn tất. Không chạy thêm test để chọn mô hình.
 
 ## Kết quả test cuối: CE `both`, ba seed
 
@@ -131,7 +148,8 @@ Artifacts đã cập nhật: [final test summary CSV](hqcm_final_test_both/hqcm_
 | 31/10/2026 | C4 weighted CE       | Đầu vào `both`; seeds 0/1/2; cùng split/revision     | Mean Acc 0,7929 ± 0,0050; Macro-F1 0,8521 ± 0,0067                         | Không chọn: F1 `fix`/`refactor` giảm trung bình |
 | 31/10/2026 | Test CE `both`       | Seeds 0/1/2; seed 2 đã chấm lại adapter đúng         | Mean Acc 0,8005 ± 0,0137; Macro-F1 0,8595 ± 0,0031                         | Ba seed hợp lệ; ghi protocol deviation lần đầu  |
 | 31/10/2026 | C6 encoder baselines | CodeBERT/GraphCodeBERT; 2 input × 3 seed; validation | Macro-F1: CB diff 0,6508; CB both 0,6587; GCB diff 0,7342; GCB both 0,7443 | Hoàn tất; input effect nhỏ/không đồng nhất      |
-| Tiếp theo  | Paired analysis      | Predictions cùng validation IDs                      | Chờ tổng hợp                                                               | Sau đó tìm benchmark/project độc lập            |
+| 31/10/2026 | Paired validation    | C2/C5/C6 predictions; 462 IDs ghép cặp; 3 seed/model | Δ Macro-F1: Qwen +0,0548; CodeBERT +0,0080; GraphCodeBERT +0,0101          | Qwen tăng 3/3; encoder nhỏ/không ổn định        |
+| Tiếp theo  | Cross-project        | Dataset/project độc lập có type labels tương thích   | Chưa có                                                                    | Khoảng trống chính trước khi nộp                |
 
 ## Quy tắc ghi kết quả mới
 

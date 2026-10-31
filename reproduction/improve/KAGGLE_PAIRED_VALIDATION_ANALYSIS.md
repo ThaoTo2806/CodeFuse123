@@ -8,7 +8,7 @@ Cell này phân tích paired trên validation predictions đã lưu; **không tr
 
 ## Chuẩn bị Kaggle
 
-1. Attach các artifacts C2, C5 và C6 thành Kaggle Input, hoặc đặt chúng ở các thư mục trong `SEARCH_ROOTS`.
+1. Attach các artifacts C2, C5 và C6 thành Kaggle Input. Cell mặc định chỉ quét đúng ba thư mục dataset bên dưới; không thêm thư mục cha `/kaggle/input` hoặc bản clone trong `/kaggle/working` cùng lúc vì sẽ tìm thấy cùng run nhiều lần.
 2. Cell tự tìm `metrics.json` và `validation_predictions.csv`. Nếu phát hiện hai artifacts cho cùng model/variant/seed, cell dừng và liệt kê các tệp trùng để tránh chọn nhầm bản.
 3. Nếu thiếu package:
 
@@ -31,11 +31,9 @@ from scipy.stats import binomtest
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 
 SEARCH_ROOTS = [
-    Path("/kaggle/input"),
-    Path("/kaggle/working/CodeFuse123/reproduction/improve"),
-    Path("/kaggle/working/hqcm_c2_input_ablation"),
-    Path("/kaggle/working/hqcm_c5_seed_confirmation"),
-    Path("/kaggle/working/hqcm_c6_encoder_baselines"),
+    Path("/kaggle/input/datasets/thanhthao28/c2result/hqcm_c2_input_ablation/hqcm_c2_input_ablation"),
+    Path("/kaggle/input/datasets/thanhthao28/c5result/hqcm_c5_seed_confirmation/hqcm_c5_seed_confirmation"),
+    Path("/kaggle/input/datasets/thanhthao28/c6result/hqcm_c6_encoder_baselines"),
 ]
 OUTPUT_DIR = Path("/kaggle/working/hqcm_paired_validation_analysis")
 EXPECTED_TRAIN_SHA256 = "a6430d65f194f5656b4704848d56c7e924bd99532ec78361b18c387a2f44c543"
