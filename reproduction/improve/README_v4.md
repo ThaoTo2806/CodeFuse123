@@ -25,11 +25,13 @@
 
 **Đánh giá mức sẵn sàng:** có bộ kết quả validation nhiều seed, encoder baselines và final test, đủ để hình thành bản thảo thực nghiệm ban đầu; nhưng **chưa đủ để khẳng định sẵn sàng cho Scopus Q3**. Vẫn chỉ có một benchmark; thiếu cross-project, paired analysis cuối cùng và related-work/novelty review. Test cuối có protocol deviation vì seed 2 từng bị chấm bằng adapter diff-only trước khi chạy lại đúng adapter. Phải công khai sai lệch này và không tinh chỉnh thêm trên test. Q3 không thể bảo đảm bằng metric; cần rà soát novelty/literature và chọn tạp chí phù hợp.
 
-**Việc cần làm tiếp:** C6 đã hoàn tất. Tiếp theo tổng hợp paired validation results theo seed và lớp; tìm dữ liệu/project độc lập cho cross-project evaluation; hoàn tất related-work/novelty review; công khai protocol deviation ở final test. Không mở lại test để chọn cấu hình.
+**Việc cần làm tiếp:** chạy [cell paired validation analysis](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md) trên predictions C2/C5/C6 đã lưu; đây là phân tích hậu nghiệm validation, không dùng test. Sau đó tìm dữ liệu/project độc lập cho cross-project evaluation, hoàn tất related-work/novelty review, và công khai protocol deviation ở final test. Không mở lại test để chọn cấu hình.
 
 Theo dõi kết quả: [THEO_DOI_TIEN_DO.md](THEO_DOI_TIEN_DO.md). Kế hoạch CHCL chi tiết: [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md). Cell final test và ghi chú protocol: [KAGGLE_FINAL_TEST_BOTH.md](KAGGLE_FINAL_TEST_BOTH.md).
 
 **C6 đã chạy:** [cell và protocol](KAGGLE_C6_ENCODER_BASELINES.md), [summary CSV](hqcm_c6_encoder_baselines/all_experiments_summary.csv). CodeBERT/GraphCodeBERT × `diff_only`/`both` × seed 0/1/2 trên validation.
+
+**Cell tiếp theo:** [KAGGLE_PAIRED_VALIDATION_ANALYSIS.md](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md), không train, không đọc test; ghép predictions theo sample ID để tính paired bootstrap và McNemar per seed.
 
 > **Hướng cũ đã tạm dừng:** Evidence-Aware Fine-Tuning for Faithful Code Change Summarization. Chưa đủ dữ liệu thủ công/baseline để đưa ra đóng góp factuality.
 

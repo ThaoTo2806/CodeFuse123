@@ -4,7 +4,7 @@ Tài liệu này là nơi ghi trạng thái và kết quả chính. Mỗi kết 
 
 ## Đọc nhanh
 
-Hướng hiện hành là CHCL. C2/C5/C4 và final test CE `both` đã chạy; C6 CodeBERT/GraphCodeBERT cũng hoàn tất đủ 12 run trên validation. Còn việc tổng hợp paired prediction, xác nhận ngoài HQCM/project và rà soát novelty trước khi cân nhắc nộp.
+Hướng hiện hành là CHCL. C2/C5/C4, final test CE `both` và C6 encoder đã chạy. Bước hiện tại là paired analysis trên validation predictions đã lưu: [cell Kaggle](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md); tiếp đó cần đánh giá ngoài HQCM/project và rà soát novelty.
 
 ## Đã làm
 
@@ -92,11 +92,11 @@ Artifacts: [C6 summary CSV](hqcm_c6_encoder_baselines/all_experiments_summary.cs
 
 ## Việc tiếp theo
 
-1. **Paired validation analysis:** dùng cùng sample IDs/predictions để so `both` với `diff_only` trong từng model/seed; báo cáo chênh lệch paired, confusion và lớp `fix/refactor`. Phân biệt bootstrap theo mẫu với độ biến thiên giữa seed.
+1. **Chạy paired validation analysis:** [cell](KAGGLE_PAIRED_VALIDATION_ANALYSIS.md) ghép predictions theo sample ID, tính paired bootstrap CI và McNemar cho `both` so với `diff_only` theo model/seed. Đây là phân tích hậu nghiệm validation, không dùng test và không chọn cấu hình.
 2. **Tăng bằng chứng ngoài HQCM:** tìm/chuẩn bị dataset hoặc project độc lập có nhãn tương thích để đánh giá cross-project; raw HQCM hiện không có repository ID để tự tạo split theo project.
 3. **Rà soát novelty và hoàn thiện manuscript:** đối chiếu related work về commit classification, input modalities, constrained scoring và code language models; công khai protocol deviation final test và khác biệt serialization/backbone khi so Qwen với encoder. Chưa khẳng định Q3 cho đến khi các bước này hoàn tất.
 
-Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4: [weighted CE](KAGGLE_C4_WEIGHTED_CE.md). C6 encoder: [cell](KAGGLE_C6_ENCODER_BASELINES.md). Final test CE `both` đã hoàn tất; không chạy thêm test để chọn mô hình.
+Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4: [weighted CE](KAGGLE_C4_WEIGHTED_CE.md). C6 encoder: [cell](KAGGLE_C6_ENCODER_BASELINES.md). Final test CE `both` đã hoàn tất. Bước kế tiếp chỉ phân tích validation predictions; không chạy thêm test để chọn mô hình.
 
 ## Kết quả test cuối: CE `both`, ba seed
 
