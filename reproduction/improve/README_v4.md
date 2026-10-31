@@ -1,12 +1,46 @@
-# Evidence-Aware Fine-Tuning for Faithful Code Change Summarization
+# Do Commit Messages Help Commit-Type Classification?
 
-> Theo dõi tóm tắt reproduction, kết quả và việc tiếp theo: [THEO_DOI_TIEN_DO.md](THEO_DOI_TIEN_DO.md). C1 prompt ablation đã chạy; thí nghiệm tiếp theo là C2 (summary-only, diff-only, cả hai): [KAGGLE_C2_INPUT_ABLATION.md](KAGGLE_C2_INPUT_ABLATION.md). Kế hoạch CHCL chi tiết: [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md).
+## Quyết định hướng nghiên cứu (31/10/2026)
 
-> **Tên làm việc (có thể đổi).** Cụm _"Functionally Hard Negatives"_ chỉ giữ nếu kiểm tra thủ công cho thấy các ví dụ âm thật sự khác chức năng. Nếu không, đổi thành _Category-Filtered Hard Negatives_.
+**Hướng đã chốt: phân loại loại commit (CHCL) bằng small code language models.** Không tiếp tục xem đề tài evidence-aware summarization/hallucination là hướng chính: chưa có gán nhãn thủ công, baseline tóm tắt hay thí nghiệm evidence-weighted loss/negative sampling. Các mục RQ0–RQ3 về summarization ở phần sau được giữ làm ghi chú lịch sử, **không phải kết quả đã trả lời**.
 
-**Trạng thái (29/10/2026):** đã hoàn thành reproduction CHCL, audit dữ liệu, C3 trên test chính thức và pilot C1 trên validation. C1 compact đang là ứng viên tốt nhưng mới có một seed. Tiếp tục C2 trên validation; chưa dùng test để chọn cấu hình. Mọi nội dung trong mục "Giả thuyết" vẫn là giả thuyết cần kiểm chứng.
+**Câu chuyện nghiên cứu dự kiến:** đo một cách có kiểm soát tác động của nguồn đầu vào (diff, commit message, hoặc cả hai) và constrained likelihood scoring đối với chất lượng/độ hợp lệ của phân loại commit; kiểm tra liệu class-weighted CE có giúp các lớp `fix`/`refactor` hay không. Đây là đóng góp đánh giá thực nghiệm và protocol, chưa phải thuật toán mới.
+
+### Câu hỏi nghiên cứu CHCL
+
+| RQ  | Câu hỏi                                                                      | Bằng chứng hiện có                                                                                                                                                                                     | Trạng thái                                                                           |
+| :-- | :--------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------- |
+| RQ1 | Diff, commit message hay cả hai cho kết quả tốt hơn?                         | C2/C5: `both` có Macro-F1 validation trung bình 0,8475 so với 0,7927 của `diff-only` trên 3 seed cùng split. Test cuối chỉ đánh giá `both`; vì vậy kết luận modality trên test chưa có so sánh paired. | Có kết quả validation; cần xác nhận độc lập/generalization                           |
+| RQ2 | Constrained scoring có thể loại output không hợp lệ mà giữ chất lượng không? | C3 trên Llama-2 Run 1: Accuracy 0,7799 so với 0,7761; Macro-F1 0,8384 so với 0,8410; invalid 0/518 thay vì 1/518.                                                                                      | Đã trả lời sơ bộ trên một test/split; invalid bằng 0 là đảm bảo của decoder tập đóng |
+| RQ3 | Inverse-frequency weighted CE có cải thiện `fix`/`refactor` ổn định không?   | C4 ba seed: Macro-F1 trung bình chỉ tăng nhẹ, Accuracy giảm; F1 `fix` và `refactor` trung bình đều giảm so với CE.                                                                                     | Kết quả âm: không chọn weighted CE                                                   |
+| RQ4 | Kết quả có đứng vững trước baseline encoder cùng protocol không?             | Chưa có CodeBERT/GraphCodeBERT trên cùng split.                                                                                                                                                        | Việc chạy tiếp: [cell C6](KAGGLE_C6_ENCODER_BASELINES.md); validation-only           |
+
+### Đóng góp có thể tuyên bố ở thời điểm này
+
+1. Tái hiện CHCL và audit lỗi preprocessing làm mất target; sửa pipeline để giữ nhãn/EOS và báo cáo metric trên đúng 8 lớp.
+2. Thực nghiệm nhiều seed trên HQCM cho thấy việc kết hợp diff và commit message là cấu hình ứng viên tốt hơn diff-only trên validation; không tuyên bố quan hệ nhân quả tổng quát.
+3. Đánh giá constrained likelihood scoring và báo cáo trade-off chất lượng/invalid; invalid bằng 0 là thuộc tính phương pháp, không phải năng lực sinh tự do.
+4. Báo cáo kết quả âm của inverse-frequency weighted CE: không có cải thiện ổn định ở `fix`/`refactor`.
+
+**Đánh giá mức sẵn sàng:** có kết quả nội bộ để viết bản thảo ban đầu, nhưng **chưa đủ để khẳng định sẵn sàng cho Scopus Q3**. Hiện chỉ có một benchmark; chưa có kiểm định paired được chốt, baseline encoder hoặc xác nhận ngoài HQCM; test cuối có protocol deviation vì seed 2 từng bị chấm bằng adapter diff-only trước khi chạy lại đúng adapter. Phải công khai sai lệch này và không tinh chỉnh thêm trên test. Q3 không thể bảo đảm bằng metric; cần rà soát novelty/literature và chọn tạp chí phù hợp.
+
+**Việc cần làm tiếp:** chạy cell C6 để có baseline encoder cùng split; sau đó so sánh validation theo seed và từng lớp. Để tăng sức nặng trước khi nộp, vẫn cần thêm đánh giá ngoài HQCM/project hoặc xác nhận độc lập, hoàn tất related-work/novelty review, và công khai protocol deviation ở final test. Cell C6 không đọc test và lặp 12 cấu hình trong một vòng lặp.
+
+Theo dõi kết quả: [THEO_DOI_TIEN_DO.md](THEO_DOI_TIEN_DO.md). Kế hoạch CHCL chi tiết: [README_HUONG_B_CHCL.md](README_HUONG_B_CHCL.md). Cell final test và ghi chú protocol: [KAGGLE_FINAL_TEST_BOTH.md](KAGGLE_FINAL_TEST_BOTH.md).
+
+**Cell tiếp theo để chạy:** [KAGGLE_C6_ENCODER_BASELINES.md](KAGGLE_C6_ENCODER_BASELINES.md). Cell lặp CodeBERT/GraphCodeBERT × `diff_only`/`both` × seed 0/1/2, tự pin model revisions và lưu metrics/predictions mỗi run.
+
+> **Hướng cũ đã tạm dừng:** Evidence-Aware Fine-Tuning for Faithful Code Change Summarization. Chưa đủ dữ liệu thủ công/baseline để đưa ra đóng góp factuality.
+
+> Ghi chú lưu trữ của hướng summarization: tên _"Functionally Hard Negatives"_ chỉ có ý nghĩa nếu sau này quay lại hướng đó và xác minh negative bằng đánh giá thủ công.
+
+> Trạng thái cũ ngày 29/10/2026 dưới đây đã được thay thế bởi quyết định nghiên cứu ở đầu file và nhật ký [THEO_DOI_TIEN_DO.md](THEO_DOI_TIEN_DO.md). Không dùng các bước/RQ summarization cũ làm kế hoạch hiện hành.
 
 ---
+
+## Nội dung lưu trữ: hướng summarization/evidence-aware (đã tạm dừng)
+
+Các mục bên dưới ghi lại giả thuyết và công việc của hướng tóm tắt commit trung thực trước khi nhóm chuyển sang CHCL. Chúng hữu ích làm lịch sử quyết định, nhưng chưa được thực nghiệm đầy đủ và không phải các RQ đã trả lời.
 
 ## 1. Đã làm
 

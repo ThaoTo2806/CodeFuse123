@@ -4,7 +4,7 @@ Tài liệu này là nơi ghi trạng thái và kết quả chính. Mỗi kết 
 
 ## Đọc nhanh
 
-4. Sau đó tổng hợp ba seed CE `both` chỉ từ seed 0, seed 1 và seed 2 đã xác minh đúng adapter. Đối chiếu với Run 1/C3 nhưng nêu rõ backbone và protocol khác nhau; không dùng test để tinh chỉnh.
+Hướng hiện hành là CHCL. Final test CE `both` đã có đủ ba seed; protocol deviation do seed 2 từng nạp nhầm adapter đã được ghi trong README_v4. Bước chạy tiếp theo là baseline encoder C6 trên validation: [cell Kaggle](KAGGLE_C6_ENCODER_BASELINES.md).
 
 ## Đã làm
 
@@ -76,7 +76,7 @@ Artifacts: [C4 summary CSV](hqcm_c4_weighted_ce/hqcm_c4_weighted_ce/all_experime
 1. **Hoàn tất báo cáo:** dùng kết quả ba seed CE `both` ở mục bên dưới; ghi rõ test đã bị chấm lần đầu bằng adapter diff-only ở seed 2, sau đó được chấm lại bằng adapter `both` đã khóa.
 2. Khi đối chiếu Run 1/C3 hoặc paper, nêu rõ backbone, scoring và protocol khác nhau. Không chọn/tinh chỉnh mô hình dựa trên test.
 
-Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4 weighted CE: [cell và cấu hình](KAGGLE_C4_WEIGHTED_CE.md). Final test: [cell và protocol](KAGGLE_FINAL_TEST_BOTH.md). Không chạy thêm test để chọn mô hình.
+Cell C2: [hướng dẫn Kaggle](KAGGLE_C2_INPUT_ABLATION.md). Cell C5: [hướng dẫn và cấu hình tái lập](KAGGLE_C5_SEED_CONFIRMATION.md). C4 weighted CE: [cell và cấu hình](KAGGLE_C4_WEIGHTED_CE.md). Final test CE `both` đã hoàn thành. **Bước chạy tiếp:** [C6 CodeBERT/GraphCodeBERT](KAGGLE_C6_ENCODER_BASELINES.md), 12 runs trong một vòng lặp (2 encoder × 2 input variant × 3 seed), validation-only; không dùng test.
 
 ## Kết quả test cuối: CE `both`, ba seed
 
@@ -97,20 +97,20 @@ Artifacts đã cập nhật: [final test summary CSV](hqcm_final_test_both/hqcm_
 
 ## Nhật ký kết quả
 
-| Ngày       | Thí nghiệm         | Cấu hình/split                                   | Kết quả chính                                      | Trạng thái / ghi chú                            |
-| :--------- | :----------------- | :----------------------------------------------- | :------------------------------------------------- | :---------------------------------------------- |
-| 28/10/2026 | Reproduction Run 1 | Llama-2-7B QLoRA; test 518                       | Accuracy 0,7761; Macro-F1 0,8410                   | Baseline; 1 output invalid                      |
-| 28/10/2026 | C3                 | Adapter Run 1; test 518; constrained scoring     | Accuracy 0,7799; Macro-F1 0,8384; ECE 0,1948       | Hoàn tất; ECE thô                               |
-| 29/10/2026 | C1 original        | Qwen2.5-Coder-1.5B; seed 0; split 4.149/462      | Accuracy 0,3052; Macro-F1 0,2611                   | Pilot; revision chưa khóa                       |
-| 29/10/2026 | C1 compact         | Cùng cấu hình/split với original                 | Accuracy 0,7900; Macro-F1 0,8560                   | Pilot; revision chưa khóa                       |
-| 30/10/2026 | C2 summary-only    | Qwen2.5-Coder-1.5B; rev `2e1fd397`; seed 0/42    | Accuracy 0,6753; Macro-F1 0,7390; ECE 0,0967       | Validation; 1 seed                              |
-| 30/10/2026 | C2 diff-only       | Cùng revision/split/seed                         | Accuracy 0,7532; Macro-F1 0,7957; ECE 0,1195       | Validation; 1 seed                              |
-| 30/10/2026 | C2 both            | Cùng revision/split/seed                         | Accuracy 0,7879; Macro-F1 0,8314; ECE 0,0935       | Validation; 1 seed                              |
-| 30/10/2026 | C5 diff-only       | Seeds 0/1/2; cùng split và revision              | Mean Acc 0,7626 ± 0,0127; Macro-F1 0,7927 ± 0,0055 | Validation; 3 seeds                             |
-| 30/10/2026 | C5 both            | Seeds 0/1/2; cùng split và revision              | Mean Acc 0,8009 ± 0,0156; Macro-F1 0,8475 ± 0,0149 | Tốt hơn diff-only ở cả ba seed                  |
-| 31/10/2026 | C4 weighted CE     | Đầu vào `both`; seeds 0/1/2; cùng split/revision | Mean Acc 0,7929 ± 0,0050; Macro-F1 0,8521 ± 0,0067 | Không chọn: F1 `fix`/`refactor` giảm trung bình |
-| 31/10/2026 | Test CE `both`     | Seeds 0/1/2; seed 2 đã chấm lại adapter đúng     | Mean Acc 0,8005 ± 0,0137; Macro-F1 0,8595 ± 0,0031 | Ba seed hợp lệ; ghi protocol deviation lần đầu  |
-| Tiếp theo  | Hoàn tất báo cáo   | Dùng aggregate đã sửa; không tune trên test      | Chờ tổng hợp                                       | Công khai lần đầu seed 2 dùng nhầm adapter      |
+| Ngày       | Thí nghiệm          | Cấu hình/split                                          | Kết quả chính                                      | Trạng thái / ghi chú                            |
+| :--------- | :------------------ | :------------------------------------------------------ | :------------------------------------------------- | :---------------------------------------------- |
+| 28/10/2026 | Reproduction Run 1  | Llama-2-7B QLoRA; test 518                              | Accuracy 0,7761; Macro-F1 0,8410                   | Baseline; 1 output invalid                      |
+| 28/10/2026 | C3                  | Adapter Run 1; test 518; constrained scoring            | Accuracy 0,7799; Macro-F1 0,8384; ECE 0,1948       | Hoàn tất; ECE thô                               |
+| 29/10/2026 | C1 original         | Qwen2.5-Coder-1.5B; seed 0; split 4.149/462             | Accuracy 0,3052; Macro-F1 0,2611                   | Pilot; revision chưa khóa                       |
+| 29/10/2026 | C1 compact          | Cùng cấu hình/split với original                        | Accuracy 0,7900; Macro-F1 0,8560                   | Pilot; revision chưa khóa                       |
+| 30/10/2026 | C2 summary-only     | Qwen2.5-Coder-1.5B; rev `2e1fd397`; seed 0/42           | Accuracy 0,6753; Macro-F1 0,7390; ECE 0,0967       | Validation; 1 seed                              |
+| 30/10/2026 | C2 diff-only        | Cùng revision/split/seed                                | Accuracy 0,7532; Macro-F1 0,7957; ECE 0,1195       | Validation; 1 seed                              |
+| 30/10/2026 | C2 both             | Cùng revision/split/seed                                | Accuracy 0,7879; Macro-F1 0,8314; ECE 0,0935       | Validation; 1 seed                              |
+| 30/10/2026 | C5 diff-only        | Seeds 0/1/2; cùng split và revision                     | Mean Acc 0,7626 ± 0,0127; Macro-F1 0,7927 ± 0,0055 | Validation; 3 seeds                             |
+| 30/10/2026 | C5 both             | Seeds 0/1/2; cùng split và revision                     | Mean Acc 0,8009 ± 0,0156; Macro-F1 0,8475 ± 0,0149 | Tốt hơn diff-only ở cả ba seed                  |
+| 31/10/2026 | C4 weighted CE      | Đầu vào `both`; seeds 0/1/2; cùng split/revision        | Mean Acc 0,7929 ± 0,0050; Macro-F1 0,8521 ± 0,0067 | Không chọn: F1 `fix`/`refactor` giảm trung bình |
+| 31/10/2026 | Test CE `both`      | Seeds 0/1/2; seed 2 đã chấm lại adapter đúng            | Mean Acc 0,8005 ± 0,0137; Macro-F1 0,8595 ± 0,0031 | Ba seed hợp lệ; ghi protocol deviation lần đầu  |
+| Tiếp theo  | C6 encoder baseline | CodeBERT/GraphCodeBERT; `diff_only`/`both`; seeds 0/1/2 | Chờ chạy                                           | Validation-only; cell tự lặp và lưu mỗi run     |
 
 ## Quy tắc ghi kết quả mới
 
